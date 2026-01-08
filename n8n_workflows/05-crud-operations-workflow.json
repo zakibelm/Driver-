@@ -1,0 +1,204 @@
+{
+  "name": "🔧 Co-op Taxi - CRUD Operations Complete",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "api/drivers/create",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-create-driver",
+      "name": "Webhook Create Driver",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const { randomUUID } = require('crypto');\n\nreturn {\n  json: {\n    id: randomUUID(),\n    email: $input.item.json.email,\n    password_hash: $input.item.json.password_hash,\n    first_name: $input.item.json.first_name,\n    last_name: $input.item.json.last_name,\n    phone: $input.item.json.phone || '',\n    license_number: $input.item.json.license_number,\n    status: 'active',\n    created_at: new Date().toISOString(),\n    updated_at: new Date().toISOString()\n  }\n};"
+      },
+      "id": "prep-driver",
+      "name": "Prepare Driver",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "dataStore": "drivers",
+        "columnsToSend": "specifyColumns",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "email": "={{ $json.email }}",
+            "password_hash": "={{ $json.password_hash }}",
+            "first_name": "={{ $json.first_name }}",
+            "last_name": "={{ $json.last_name }}",
+            "phone": "={{ $json.phone }}",
+            "license_number": "={{ $json.license_number }}",
+            "status": "={{ $json.status }}",
+            "created_at": "={{ $json.created_at }}",
+            "updated_at": "={{ $json.updated_at }}"
+          }
+        }
+      },
+      "id": "insert-driver",
+      "name": "Insert Driver",
+      "type": "n8n-nodes-base.dataStore",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, driver: $json } }}"
+      },
+      "id": "respond-driver",
+      "name": "Respond Driver",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "api/services/create",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-create-service",
+      "name": "Webhook Create Service",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "const { randomUUID } = require('crypto');\n\nreturn {\n  json: {\n    id: randomUUID(),\n    driver_email: $input.item.json.driver_email,\n    type: $input.item.json.type,\n    amount: parseFloat($input.item.json.amount),\n    date: new Date($input.item.json.date).toISOString(),\n    description: $input.item.json.description || '',\n    created_at: new Date().toISOString(),\n    updated_at: new Date().toISOString()\n  }\n};"
+      },
+      "id": "prep-service",
+      "name": "Prepare Service",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 500]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "dataStore": "services",
+        "columnsToSend": "specifyColumns",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "driver_email": "={{ $json.driver_email }}",
+            "type": "={{ $json.type }}",
+            "amount": "={{ $json.amount }}",
+            "date": "={{ $json.date }}",
+            "description": "={{ $json.description }}",
+            "created_at": "={{ $json.created_at }}",
+            "updated_at": "={{ $json.updated_at }}"
+          }
+        }
+      },
+      "id": "insert-service",
+      "name": "Insert Service",
+      "type": "n8n-nodes-base.dataStore",
+      "typeVersion": 1,
+      "position": [680, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, service: $json } }}"
+      },
+      "id": "respond-service",
+      "name": "Respond Service",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 500]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "api/services/list/:email",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-list-services",
+      "name": "Webhook List Services",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 700]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "dataStore": "services",
+        "returnAll": false,
+        "limit": 50,
+        "options": {
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "driver_email",
+                "operation": "equal",
+                "value": "={{ $parameter[\"path\"][\"email\"] }}"
+              }
+            ]
+          },
+          "sort": {
+            "sortFields": [
+              {
+                "fieldName": "created_at",
+                "order": "descending"
+              }
+            ]
+          }
+        }
+      },
+      "id": "get-services",
+      "name": "Get Services",
+      "type": "n8n-nodes-base.dataStore",
+      "typeVersion": 1,
+      "position": [460, 700]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, services: $json } }}"
+      },
+      "id": "respond-services",
+      "name": "Respond Services",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 700]
+    }
+  ],
+  "connections": {
+    "Webhook Create Driver": {
+      "main": [[{"node": "Prepare Driver", "type": "main", "index": 0}]]
+    },
+    "Prepare Driver": {
+      "main": [[{"node": "Insert Driver", "type": "main", "index": 0}]]
+    },
+    "Insert Driver": {
+      "main": [[{"node": "Respond Driver", "type": "main", "index": 0}]]
+    },
+    "Webhook Create Service": {
+      "main": [[{"node": "Prepare Service", "type": "main", "index": 0}]]
+    },
+    "Prepare Service": {
+      "main": [[{"node": "Insert Service", "type": "main", "index": 0}]]
+    },
+    "Insert Service": {
+      "main": [[{"node": "Respond Service", "type": "main", "index": 0}]]
+    },
+    "Webhook List Services": {
+      "main": [[{"node": "Get Services", "type": "main", "index": 0}]]
+    },
+    "Get Services": {
+      "main": [[{"node": "Respond Services", "type": "main", "index": 0}]]
+    }
+  }
+}

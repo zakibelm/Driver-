@@ -1,0 +1,41 @@
+{
+  "name": "🚖 Co-op Taxi - Create Services Table",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger-2",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "dataStore": "services",
+        "columnDefinitions": {
+          "columns": [
+            {"name": "id", "type": "string"},
+            {"name": "driver_email", "type": "string"},
+            {"name": "type", "type": "string"},
+            {"name": "amount", "type": "number"},
+            {"name": "date", "type": "dateTime"},
+            {"name": "description", "type": "string"},
+            {"name": "created_at", "type": "dateTime"},
+            {"name": "updated_at", "type": "dateTime"}
+          ]
+        }
+      },
+      "id": "create-services",
+      "name": "Create Services DataStore",
+      "type": "n8n-nodes-base.dataStore",
+      "typeVersion": 1,
+      "position": [460, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{"node": "Create Services DataStore", "type": "main", "index": 0}]]
+    }
+  }
+}

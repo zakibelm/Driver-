@@ -1,0 +1,43 @@
+{
+  "name": "🚖 Co-op Taxi - Create Drivers Table",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "dataStore": "drivers",
+        "columnDefinitions": {
+          "columns": [
+            {"name": "id", "type": "string"},
+            {"name": "email", "type": "string"},
+            {"name": "password_hash", "type": "string"},
+            {"name": "first_name", "type": "string"},
+            {"name": "last_name", "type": "string"},
+            {"name": "phone", "type": "string"},
+            {"name": "license_number", "type": "string"},
+            {"name": "status", "type": "string"},
+            {"name": "created_at", "type": "dateTime"},
+            {"name": "updated_at", "type": "dateTime"}
+          ]
+        }
+      },
+      "id": "create-drivers",
+      "name": "Create Drivers DataStore",
+      "type": "n8n-nodes-base.dataStore",
+      "typeVersion": 1,
+      "position": [460, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{"node": "Create Drivers DataStore", "type": "main", "index": 0}]]
+    }
+  }
+}
