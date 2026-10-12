@@ -23,9 +23,9 @@ class BackendService {  constructor() { localStorage.removeItem('user_settings'
   async getSession(): Promise<UserSession | null> {
     if (sessionStorage.getItem('drivepilot_demo') === '1') return this.loginDemo();
     const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
-    if (response.status === 401) return null;
-    if (!response.ok) throw new Error('Session indisponible.');
-    return response.json();
+    if (!response.ok) throw new Error('Session indisponible.');
+    const data = await response.json();
+    return data && data.user ? data : null;
   }
   async logout(): Promise<void> {
     if (!this.demo) await this.api('/api/auth/logout', 'POST');
