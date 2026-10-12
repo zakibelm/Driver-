@@ -15,7 +15,13 @@ const App: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dataError, setDataError] = useState('');
-  const [checkingSession, setCheckingSession] = useState(true);
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [openAddForm, setOpenAddForm] = useState(false);
+
+  const navigate = (page: string, options?: { openForm?: boolean }) => {
+    setCurrentPage(page);
+    setOpenAddForm(Boolean(options?.openForm));
+  };
 
   useEffect(() => {
     let active = true;
@@ -62,7 +68,7 @@ const App: React.FC = () => {
         {/* Sidebar (Desktop + Mobile Drawer) */}
         <Sidebar 
             currentPage={currentPage} 
-            onNavigate={setCurrentPage} 
+            onNavigate={navigate} 
             onLogout={handleLogout} 
             user={session.user}
             isOpen={isSidebarOpen}
@@ -92,8 +98,8 @@ const App: React.FC = () => {
                     {currentPage === 'dashboard' && (
                         <Dashboard 
                             services={services} 
-                            navigateToChat={() => setCurrentPage('chat')}
-                            onNavigate={setCurrentPage}
+                            navigateToChat={() => navigate('chat')}
+                            onNavigate={navigate}
                             user={session.user}
                         />
                     )}
@@ -101,7 +107,9 @@ const App: React.FC = () => {
                         <Services 
                             services={services} 
                             onServiceAdded={refreshServices}
-                            onServiceDeleted={refreshServices}
+                            onServiceDeleted={refreshServices}
+                            autoOpenForm={openAddForm}
+                            onFormOpened={() => setOpenAddForm(false)}
                         />
                     )}
                     {currentPage === 'chat' && (
@@ -116,7 +124,7 @@ const App: React.FC = () => {
             {/* Mobile Bottom Navigation */}
             <BottomNav 
                 currentPage={currentPage}
-                onNavigate={setCurrentPage}
+                onNavigate={navigate}
                 onLogout={handleLogout}
                 user={session.user}
                 toggleSidebar={() => setIsSidebarOpen(true)}
