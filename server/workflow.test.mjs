@@ -37,8 +37,23 @@ test('service types workflow: authenticated, validated, append-only',()=>{
  assert.equal(ride('Navette Aéroport'),true);
  assert.equal(ride('<script>'),false);
 });
+test('mail workflow: authenticated, single recipient, no header injection',()=>{
+ const workflow = JSON.parse(readFileSync('n8n_workflows/07-send-mail-workflow.json'));
+ const hook=workflow.nodes.find(n=>n.type.endsWith('.webhook'));
+ assert.equal(hook.parameters.path,'api/mail/send');
+ assert.equal(hook.parameters.httpMethod,'POST');
+ assert.deepEqual(hook.credentials,{httpHeaderAuth:{name:'DrivePilot Header Auth'}});
+ const send=workflow.nodes.find(n=>n.type==='n8n-nodes-base.emailSend');
+ assert.deepEqual(send.credentials,{smtp:{name:'DrivePilot SMTP'}});
+ const code=workflow.nodes.find(n=>n.name==='Validate Send Mail').parameters.jsCode;
+ const run=(body,query={})=>new Function('$input',code)({first:()=>({json:{body,query}})})[0].json.valid;
+ const ok={to:'a@example.test',subject:'Sujet',text:'Texte'};
+ assert.equal(run(ok),true);
+ for(const bad of [{...ok,to:'a@x.test, b@y.test'},{...ok,to:'<a@x.test>'},{...ok,subject:'S\r\nBcc: x@y.test'},{...ok,text:'x'.repeat(5001)},{...ok,cc:'x@y.test'},{to:ok.to,subject:ok.subject}]) assert.equal(run(bad),false);
+ assert.equal(run(ok,{x:1}),false);
+});
 test('strict service validation and canonical service types',()=>{
  const value={type:'Regular',amount:25,date:'2026-10-12T12:00:00.000Z',description:'ok'};
  assert.equal(serviceInput(value).amount,25);
- for(const patch of [{amount:0},{amount:10001},{amount:'25'},{amount:Infinity},{date:'2026-02-30T00:00:00Z'},{type:'unknown'},{description:'x'.repeat(501)},{driver_email:'other@example.test'}]) assert.throws(()=>serviceInput({...value,...patch}));
+ for(const patch of [{amount:0},{amount:10001},{amount:'25'},{amount:Infinity},{date:'2026-02-30T00:00:00Z'},{type:'<inconnu>'},{description:'x'.repeat(501)},{driver_email:'other@example.test'}]) assert.throws(()=>serviceInput({...value,...patch}));
 });
