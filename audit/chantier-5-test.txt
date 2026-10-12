@@ -1,0 +1,21 @@
+
+> drivepilot@0.0.0 test
+> node --test server/
+
+✔ real session cookie, rejection, rate limit isolation and logout (795.0324ms)
+✔ private path variants are rejected before filesystem access (2.8449ms)
+✔ progressive cooldown isolates identifiers and distrusts forwarded IP by default (0.5312ms)
+✔ secure session cookie in production and on forwarded HTTPS, including logout (0.4701ms)
+✔ security headers prohibit framing, MIME sniffing and referrer disclosure (0.62ms)
+✔ services deny unauthenticated access, ignore forged ownership and restrict deletion (144.1481ms)
+✔ n8n provider fails closed and scopes requests using server identity (3.2271ms)
+✔ webhook credential references and validation before data access (4.5172ms)
+✔ strict service validation and canonical service types (0.9787ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1378.2143

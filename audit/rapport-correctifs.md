@@ -34,3 +34,10 @@ ADMIN_AUTH_FILE obligatoire, absolu, r�solu hors projet ; aucun repli sur le fic
 Fichiers : server/files.mjs et tests, plugin, config Vite, package.json, pnpm-lock.yaml, pnpm-workspace.yaml, README.
 
 Source s�curit� : https://github.com/vitejs/vite/security/advisories/GHSA-fx2h-pf6j-xcff ; version corrig�e de la s�rie 6.x sup�rieure � 6.4.2.
+
+## Chantier 5 — scrypt et tentatives
+
+Hachage asynchrone ; maximum huit dérivations simultanées ; délais exponentiels de 1 à 60 secondes par IP+identifiant avec Retry-After et expiration 15 minutes. X-Forwarded-For ignoré sauf TRUST_PROXY=1. Les autres identifiants derrière le même proxy ne subissent pas de verrouillage collectif. Sessions et compteurs bornés en mémoire. Configuration de comptes multiples possible avec rôles de confiance dans le fichier externe. Tests uniquement avec comptes synthétiques injectés, aucun accès au compte réel.
+
+Preuves : chantier-5-test.txt (9 tests verts) et chantier-5-build.txt. Fichiers : auth.mjs, limiter.mjs et tests. Limite : stockage de session et quotas mono-processus ; Redis sera requis pour plusieurs instances.
+
