@@ -75,6 +75,7 @@ const App: React.FC = () => {
             {/* Mobile Header with Hamburger */}
             <div className="md:hidden flex items-center justify-between px-6 py-4 bg-white border-b border-slate-50 shadow-sm z-30">
                 <button 
+                    aria-label="Ouvrir le menu"
                     onClick={() => setIsSidebarOpen(true)}
                     className="p-2 -ml-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
                 >

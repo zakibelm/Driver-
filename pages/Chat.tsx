@@ -28,7 +28,7 @@ const Chat: React.FC<ChatProps> = ({ services }) => {
     if (!input.trim() || isTyping) return;
     setError('');
 
-    const tempId = Math.random().toString();
+    const tempId = crypto.randomUUID();
     const userMsg: AIConversation = {
         id: tempId,
         driver_email: 'current',
@@ -122,7 +122,7 @@ const Chat: React.FC<ChatProps> = ({ services }) => {
                                         <div className="bg-slate-50 border border-slate-100 text-slate-800 p-4 rounded-2xl rounded-tl-none">
                                             <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">{msg.ai_response}</p>
                                         </div>
-                                        <p className="text-[10px] text-slate-300 mt-1 ml-1">Kimi K2</p>
+                                        <p className="text-[10px] text-slate-300 mt-1 ml-1">DrivePilot</p>
                                     </div>
                                 </div>
                             </div>
@@ -160,7 +160,7 @@ const Chat: React.FC<ChatProps> = ({ services }) => {
                         maxLength={2000}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Message Kimi..."
+                        placeholder="Message à DrivePilot..."
                         className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-slate-900 placeholder-slate-400"
                     />
                     <button 

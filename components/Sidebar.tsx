@@ -37,6 +37,7 @@ export const Sidebar: React.FC<NavigationProps> = ({ currentPage, onNavigate, on
         {/* Mobile Close Button */}
         <div className="md:hidden absolute top-4 right-4">
             <button 
+                aria-label="Fermer le menu"
                 onClick={toggleSidebar}
                 className="p-2 text-slate-400 hover:text-red-600 transition-colors"
             >
@@ -118,6 +119,7 @@ export const BottomNav: React.FC<NavigationProps> = ({ currentPage, onNavigate, 
             {navItems.map((item) => (
                 <button
                     key={item.id}
+                    aria-label={item.id === 'dashboard' ? 'Accueil' : item.id === 'services' ? 'Services' : item.id === 'chat' ? 'Assistant' : 'Paramètres'}
                     onClick={() => onNavigate(item.id)}
                     className={`flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
                         currentPage === item.id 

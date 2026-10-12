@@ -16,17 +16,18 @@ const Dashboard: React.FC<DashboardProps> = ({ services, navigateToChat, onNavig
   const stats = useMemo(() => {
     const totalRevenue = services.reduce((sum, s) => sum + s.amount, 0);
     
-    // Simulating "Today's" data
-    const todaysRevenue = 142.50;
-    const todaysRides = 8;
-    const todaysHours = "4h 30m";
-
-    // Chart Data
+    const today = new Date().toLocaleDateString('fr-CA');
+    const todaysServices = services.filter(s => new Date(s.date).toLocaleDateString('fr-CA') === today);
+    const todaysRevenue = todaysServices.reduce((sum, s) => sum + s.amount, 0);
+    const todaysRides = todaysServices.length;
+    const todaysHours = '—'; // Hours are not collected by this application.
     const sortedServices = [...services].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    const timelineData = sortedServices.slice(-7).map((s, i) => ({
-        day: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'][i % 7],
-        amount: s.amount * (Math.random() + 0.5) // randomness for visual wave effect
-    }));
+    const timelineData = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(); date.setDate(date.getDate() - (6 - index));
+      const key = date.toLocaleDateString('fr-CA');
+      return { day: date.toLocaleDateString('fr-CA', { weekday: 'short' }),
+        amount: services.filter(s => new Date(s.date).toLocaleDateString('fr-CA') === key).reduce((sum, s) => sum + s.amount, 0) };
+    });
 
     const recentActivity = sortedServices.reverse().slice(0, 3);
 
@@ -59,7 +60,7 @@ const Dashboard: React.FC<DashboardProps> = ({ services, navigateToChat, onNavig
                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Aujourd'hui</span>
-                        <span className="flex items-center gap-1 text-[10px] bg-green-400/20 text-green-100 px-2 py-0.5 rounded font-medium"><TrendingUp size={10} /> +15%</span>
+                        
                     </div>
                     <h3 className="text-5xl font-bold tracking-tighter">{stats.todaysRevenue.toFixed(2)}<span className="text-2xl align-top opacity-60 ml-1">$</span></h3>
                 </div>
@@ -81,7 +82,7 @@ const Dashboard: React.FC<DashboardProps> = ({ services, navigateToChat, onNavig
                     </div>
                     <div>
                         <p className="text-lg font-bold leading-none">{stats.todaysHours}</p>
-                        <p className="text-[10px] opacity-70 uppercase tracking-wide">Heures</p>
+                        <p className="text-[10px] opacity-70 uppercase tracking-wide">Heures non suivies</p>
                     </div>
                 </div>
             </div>
@@ -121,7 +122,7 @@ const Dashboard: React.FC<DashboardProps> = ({ services, navigateToChat, onNavig
       <div className="bg-white rounded-[28px] p-6 shadow-sm border border-slate-100">
           <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-slate-900">Tendance Semaine</h3>
-              <button className="text-xs font-semibold text-slate-400 hover:text-red-600">Voir rapport</button>
+              
           </div>
           <div className="h-24 w-full">
             <ResponsiveContainer width="100%" height="100%">

@@ -56,3 +56,13 @@ Preuves : chantier-6-test.txt (11 tests verts, exclusion d’une description malve
 
 Importmap esm.sh, CDN Tailwind et Google Fonts retirÃ©s. Tailwind 3.4.19 compilÃ© par PostCSS ; Inter 5.3.0 fourni par @fontsource/inter et embarquÃ© dans dist. CSP sans domaine externe, script-src self en production ; lâ€™exception inline en dÃ©veloppement sert uniquement au prÃ©ambule React/Vite, styles inline nÃ©cessaires aux graphiques. Preuves : chantier-7-build.txt (CSS et huit fichiers de police locaux), chantier-7-test.txt (11 tests verts, CSP sans domaine HTTP externe). Fichiers : index.html, index.tsx, styles.css, configs Tailwind/PostCSS, package.json, pnpm-lock.yaml, security et test.
 
+
+## Chantier 8 — qualité, marque et documentation
+
+UUID pour les messages temporaires ; aucun Math.random dans le code produit. Liens inertes de connexion retirés. DrivePilot partout dans l’interface. Les indicateurs du tableau de bord et sa courbe utilisent les courses réelles chargées ; aucun revenu fixe, pourcentage fictif ou statut PAYÉ inventé. Dates de formulaire interprétées à midi local pour éviter le décalage de jour au Canada. Formulaire mobile défilant, labels reliés et noms accessibles ajoutés. README réécrit, variables et limites documentées, aucune bannière AI Studio ni GEMINI.
+
+loginDemo n’appelle plus logout depuis le chantier 2. Les préférences et fournisseurs retirés par dépendance des chantiers 2/6 sont vérifiés ici.
+
+Écart explicite : n8n Header Auth natif renvoie 403 sans jeton (source : https://github.com/n8n-io/n8n/blob/master/packages/nodes-base/nodes/Webhook/utils.ts). Le fragment deployment/n8n-header-auth.conf permet 401 sans jeton au reverse proxy. Non déployé ; pas de test prétendu en production.
+
+Preuves : chantier-8-test.txt (11 tests verts), chantier-8-build.txt. Fichiers : App, Sidebar, Login, Chat, Dashboard, Services, README et fragment nginx.

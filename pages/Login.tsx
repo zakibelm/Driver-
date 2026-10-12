@@ -88,9 +88,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-red-500 text-slate-900 font-medium placeholder-slate-400 outline-none transition-all"
                         placeholder="••••••••"
                     />
-                    <div className="flex justify-end mt-2">
-                        <button type="button" className="text-xs text-red-500 font-medium hover:underline">Mot de passe oublié ?</button>
-                    </div>
+
                 </div>
 
                 <button 
@@ -120,9 +118,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </form>
         </div>
         
-        <p className="text-center text-xs text-slate-400 mt-6">
-            Nouveau chauffeur ? <span className="text-red-600 font-bold cursor-pointer">Postuler ici</span>
-        </p>
+
       </div>
     </div>
   );
