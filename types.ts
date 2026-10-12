@@ -42,20 +42,15 @@ export interface AIConversation {
 }
 
 export interface UserSession {
-  token: string;
+  mode?: 'demo';
   user: {
     id: string;
     email: string;
     name: string;
-    role: string;
+    role: 'admin' | 'chauffeur';
   };
 }
 
 export interface UserSettings {
-  openRouterApiKey: string;
-  model: string;
   enableRAG: boolean;
-  systemPrompt: string;
-  n8nUrl: string;
-  useN8nBackend: boolean;
 }

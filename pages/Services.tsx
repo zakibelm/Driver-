@@ -14,6 +14,7 @@ const SERVICE_TYPES: ServiceType[] = ['Regular', 'TCT', 'Olymel', 'Bombardier', 
 const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onServiceDeleted }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('All');
 
@@ -21,26 +22,26 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
   const [formData, setFormData] = useState({
     type: 'Regular' as ServiceType,
     amount: '',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toLocaleDateString('en-CA'),
     description: ''
   });
 
   const handleAddService = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
     try {
       await backend.addService({
-        driver_email: 'current',
         type: formData.type,
         amount: parseFloat(formData.amount),
-        date: new Date(formData.date).toISOString(),
+        date: new Date(formData.date + 'T12:00:00').toISOString(),
         description: formData.description
       });
       onServiceAdded();
       setIsModalOpen(false);
-      setFormData({ type: 'Regular', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
+      setFormData({ type: 'Regular', amount: '', date: new Date().toLocaleDateString('en-CA'), description: '' });
     } catch (error) {
-      console.error(error);
+      setError(error instanceof Error ? error.message : 'Ajout impossible.');
     } finally {
       setLoading(false);
     }
@@ -48,8 +49,8 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Voulez-vous vraiment supprimer cette course ?')) {
-      await backend.deleteService(id);
-      onServiceDeleted();
+      try { await backend.deleteService(id); onServiceDeleted(); }
+      catch (error) { setError(error instanceof Error ? error.message : 'Suppression impossible.'); }
     }
   };
 
@@ -77,6 +78,7 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
         </button>
       </div>
 
+      {error && !isModalOpen && <p role="alert" className="text-red-700">{error}</p>}
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
         <div className="relative flex-1">
@@ -162,15 +164,16 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
       {/* Dark Mode Add Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center sm:p-4 bg-black/80 backdrop-blur-sm">
-            <div className="bg-[#121212] w-full max-w-md rounded-t-[32px] md:rounded-[32px] overflow-hidden animate-in slide-in-from-bottom-20 duration-300 shadow-2xl border border-white/10">
+            <div role="dialog" aria-modal="true" aria-labelledby="new-service-title" className="bg-[#121212] max-h-[90dvh] overflow-y-auto w-full max-w-md rounded-t-[32px] md:rounded-[32px] overflow-hidden animate-in slide-in-from-bottom-20 duration-300 shadow-2xl border border-white/10">
                 <div className="px-6 py-6 flex justify-between items-center border-b border-white/5">
-                    <h3 className="text-white font-bold text-xl">Nouvelle Course</h3>
-                    <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white bg-white/5 p-2 rounded-full transition-colors">
+                    <h3 id="new-service-title" className="text-white font-bold text-xl">Nouvelle Course</h3>
+                    <button aria-label="Fermer le formulaire" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white bg-white/5 p-2 rounded-full transition-colors">
                         <X size={20} />
                     </button>
                 </div>
                 
                 <form onSubmit={handleAddService} className="p-6 space-y-5">
+                    {error && <p role="alert" className="text-red-300">{error}</p>}
                     {/* Quick Select Chips - Now showing ALL service types */}
                     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                         {SERVICE_TYPES.map(type => (
@@ -191,10 +194,10 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
 
                     <div className="space-y-4">
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/5 focus-within:border-red-500/50 transition-colors">
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Type de Service</label>
+                            <label htmlFor="service-type" className="block text-xs font-bold text-slate-400 uppercase mb-1">Type de Service</label>
                             <div className="flex items-center gap-3 text-white">
                                 <Type size={18} className="text-slate-500" />
-                                <select 
+                                <select id="service-type"
                                     className="w-full bg-transparent border-none focus:ring-0 p-0 text-white font-medium outline-none"
                                     value={formData.type}
                                     onChange={(e) => setFormData({...formData, type: e.target.value as ServiceType})}
@@ -205,12 +208,12 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                         </div>
 
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/5 focus-within:border-red-500/50 transition-colors">
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Montant Total</label>
+                            <label htmlFor="service-amount" className="block text-xs font-bold text-slate-400 uppercase mb-1">Montant Total</label>
                             <div className="flex items-center gap-3 text-white">
                                 <DollarSign size={18} className="text-slate-500" />
                                 <input 
-                                    type="number" 
-                                    step="0.01"
+                                    id="service-amount" type="number" 
+                                    step="0.01" min="0.01" max="10000"
                                     required
                                     placeholder="0.00"
                                     className="w-full bg-transparent border-none focus:ring-0 p-0 text-white font-medium placeholder-slate-600 outline-none"
@@ -221,11 +224,11 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                         </div>
 
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/5 focus-within:border-red-500/50 transition-colors">
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Date & Heure</label>
+                            <label htmlFor="service-date" className="block text-xs font-bold text-slate-400 uppercase mb-1">Date</label>
                             <div className="flex items-center gap-3 text-white">
                                 <Calendar size={18} className="text-slate-500" />
                                 <input 
-                                    type="date" 
+                                    id="service-date" type="date" 
                                     required
                                     className="w-full bg-transparent border-none focus:ring-0 p-0 text-white font-medium outline-none invert-calendar-icon"
                                     value={formData.date}
@@ -236,10 +239,10 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                         </div>
 
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/5 focus-within:border-red-500/50 transition-colors">
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Notes (Optionnel)</label>
-                            <textarea 
+                            <label htmlFor="service-notes" className="block text-xs font-bold text-slate-400 uppercase mb-1">Notes (Optionnel)</label>
+                            <textarea id="service-notes"
                                 className="w-full bg-transparent border-none focus:ring-0 p-0 text-white font-medium placeholder-slate-600 outline-none resize-none"
-                                rows={2}
+                                rows={2} maxLength={500}
                                 placeholder="Détails supplémentaires..."
                                 value={formData.description}
                                 onChange={(e) => setFormData({...formData, description: e.target.value})}

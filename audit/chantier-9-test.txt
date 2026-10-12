@@ -1,0 +1,30 @@
+Exécution : Linux, Node v22.22.0, TypeScript 5.8.2 (nécessaire à demo.test). Commande : node --test server/
+Le build Vite et tsc n'ont PAS été exécutés dans cet environnement (dépendances du projet absentes).
+
+ok 1 - malformed account entries are rejected with 401, never a 500
+ok 2 - real session cookie, rejection, rate limit isolation and logout
+ok 3 - course description injection never reaches model; key remains server-side
+ok 4 - chat authenticates, bounds messages, filters rows and enforces per-user quota
+ok 5 - demo CRUD/chat stay local and forged browser settings cannot grant real access
+ok 6 - private path variants are rejected before filesystem access
+ok 7 - actual server sessions enforce ownership and admin role
+ok 8 - progressive cooldown isolates identifiers and distrusts forwarded IP by default
+ok 9 - one address rotating identifiers is throttled after its free failures
+ok 10 - failures spread over many addresses back off a single account, capped at 60 s
+ok 11 - flooding the tables cannot evict the backoff of a targeted account
+ok 12 - production server: static files, SPA fallback, API wiring, headers and path safety
+ok 13 - direct identifiers are detected, ordinary driver questions are not
+ok 14 - chat refuses personal data before any provider call and without consuming the provider
+ok 15 - secure session cookie in production and on forwarded HTTPS, including logout
+ok 16 - security headers prohibit framing, MIME sniffing and referrer disclosure
+ok 17 - services deny unauthenticated access, ignore forged ownership and restrict deletion
+ok 18 - n8n provider fails closed and scopes requests using server identity
+ok 19 - webhook credential references and validation before data access
+ok 20 - strict service validation and canonical service types
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# duration_ms 4798.100915
