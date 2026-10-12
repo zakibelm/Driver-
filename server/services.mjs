@@ -1,5 +1,5 @@
 import { HttpError, jsonBody, reply, sameOrigin, validate } from './http.mjs';
-import { serviceInput, serviceId } from './validation.mjs';
+import { serviceInput, serviceId, currentServiceTypes } from './validation.mjs';
 export function createServicesMiddleware({ getUser, provider }) {
  return async (req,res,next) => {
   const url = new URL(req.url, 'http://local');
@@ -15,7 +15,8 @@ export function createServicesMiddleware({ getUser, provider }) {
    }
    if(req.method==='POST' && url.pathname==='/api/services') {
     const body = await jsonBody(req);
-    const input=validate(()=>serviceInput(body));
+    const active=currentServiceTypes(provider.listTypes ? await provider.listTypes() : []).filter(t=>t.active).map(t=>t.name);
+    const input=validate(()=>serviceInput(body,false,active));
     const service = await provider.create({...input,driver_email:user.email});
     return reply(res,201,{service});
    }
