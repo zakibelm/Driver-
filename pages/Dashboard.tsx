@@ -1,13 +1,14 @@
 import React, { useMemo } from 'react';
 import { Service } from '../types';
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
-import { Car, Clock, Plus, List, TrendingUp, ChevronRight, MapPin } from 'lucide-react';
+import { Car, Clock, Plus, List } from 'lucide-react';
+import { formatDate } from '../utils/date';
 
 interface DashboardProps {
   services: Service[];
   navigateToChat: () => void;
   // Note: These props are passed via App.tsx but we'll use local navigation for simplicity in this demo structure
-  onNavigate?: (page: string) => void;
+  onNavigate?: (page: string, options?: { openForm?: boolean }) => void;
   user: { name: string };
 }
 
@@ -43,10 +44,6 @@ const Dashboard: React.FC<DashboardProps> = ({ services, navigateToChat, onNavig
             <p className="text-slate-400 text-xs font-medium uppercase tracking-wide">Bonjour,</p>
             <h2 className="text-2xl font-bold text-slate-900">{user.name.split(' ')[0]}</h2>
         </div>
-        <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-600 border border-slate-100 shadow-sm relative">
-            <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-        </button>
       </div>
 
       {/* Hero Red Card */}
@@ -91,8 +88,8 @@ const Dashboard: React.FC<DashboardProps> = ({ services, navigateToChat, onNavig
 
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-2 gap-4">
-        <button 
-            onClick={() => onNavigate && onNavigate('services')}
+        <button 
+            onClick={() => onNavigate && onNavigate('services', { openForm: true })}
             className="group bg-slate-900 hover:bg-slate-800 text-white p-5 rounded-[28px] flex flex-col justify-between h-44 transition-all shadow-lg active:scale-95"
         >
             <div className="bg-red-600 w-12 h-12 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-red-900/50">
@@ -164,10 +161,10 @@ const Dashboard: React.FC<DashboardProps> = ({ services, navigateToChat, onNavig
                             <Car size={20} />
                         </div>
                         <div>
-                            <p className="font-bold text-slate-900">#{service.id.toUpperCase()}</p>
+                            <p className="font-bold text-slate-900 truncate max-w-[10rem] sm:max-w-xs">{service.description || service.type}</p>
                             <div className="flex items-center gap-1 text-slate-400 text-xs mt-0.5">
                                 <Clock size={10} />
-                                <span>{new Date(service.date).toLocaleDateString()} • {service.type}</span>
+                                <span>{formatDate(service.date)} • {service.type}</span>
                             </div>
                         </div>
                     </div>
