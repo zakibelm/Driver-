@@ -14,6 +14,15 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [services, setServices] = useState<Service[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    backend.getSession().then(value => { if (active) setSession(value); })
+      .catch(() => { if (active) setSession(null); })
+      .finally(() => { if (active) setCheckingSession(false); });
+    return () => { active = false; };
+  }, []);
 
   // Load initial data on mount/login
   useEffect(() => {
@@ -31,11 +40,15 @@ const App: React.FC = () => {
     setSession(newSession);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try { await backend.logout(); }
+    catch { window.alert('Déconnexion impossible. Réessayez.'); return; }
     setSession(null);
     setCurrentPage('dashboard');
     setIsSidebarOpen(false);
   };
+
+  if (checkingSession) return <div role="status" className="p-8 text-slate-600">Chargement de votre session…</div>;
 
   if (!session) {
     return <Login onLogin={handleLogin} />;
@@ -64,7 +77,7 @@ const App: React.FC = () => {
                 >
                     <Menu size={24} />
                 </button>
-                <div className="font-bold text-slate-900 tracking-tight">CO-OP TAXI</div>
+                <img src="/drivepilot-logo.png" alt="DrivePilot" className="w-32 h-16 object-contain" />
                 <div className="w-10"></div> {/* Spacer for balance */}
             </div>
 

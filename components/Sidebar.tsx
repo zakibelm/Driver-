@@ -45,13 +45,10 @@ export const Sidebar: React.FC<NavigationProps> = ({ currentPage, onNavigate, on
         </div>
 
         <div className="p-8">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-red-200">
-                  <Car size={20} />
-              </div>
+            <div className="flex flex-col items-center gap-3">
+              <h1><img src="/drivepilot-logo.png" alt="DrivePilot" className="w-52 h-28 object-contain" /></h1>
               <div>
-                  <h1 className="text-xl font-bold text-slate-900 tracking-tight">CO-OP TAXI</h1>
-                  <p className="text-xs text-slate-400 font-medium">PORTAIL CHAUFFEUR</p>
+                  <p className="text-xs text-slate-400 font-medium">{user.role === 'admin' ? 'PORTAIL ADMINISTRATEUR' : 'PORTAIL CHAUFFEUR'}</p>
               </div>
             </div>
         </div>
@@ -67,7 +64,7 @@ export const Sidebar: React.FC<NavigationProps> = ({ currentPage, onNavigate, on
                     <p className="font-bold text-sm text-slate-900 truncate">{user.name}</p>
                     <div className="flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                      <p className="text-xs text-slate-500 truncate">En ligne</p>
+                      <p className="text-xs text-slate-500 truncate">{user.role === 'admin' ? 'Administrateur' : 'En ligne'}</p>
                     </div>
                 </div>
             </div>

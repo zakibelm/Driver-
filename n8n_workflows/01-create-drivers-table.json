@@ -1,43 +1,88 @@
 {
-  "name": "🚖 Co-op Taxi - Create Drivers Table",
+  "name": "DrivePilot - Create drivers",
   "nodes": [
     {
-      "parameters": {},
-      "id": "manual-trigger-1",
+      "id": "manual",
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [240, 300]
+      "parameters": {},
+      "position": [
+        0,
+        0
+      ]
     },
     {
+      "id": "create-table",
+      "name": "Create Table",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        250,
+        0
+      ],
       "parameters": {
+        "resource": "table",
         "operation": "create",
-        "dataStore": "drivers",
-        "columnDefinitions": {
-          "columns": [
-            {"name": "id", "type": "string"},
-            {"name": "email", "type": "string"},
-            {"name": "password_hash", "type": "string"},
-            {"name": "first_name", "type": "string"},
-            {"name": "last_name", "type": "string"},
-            {"name": "phone", "type": "string"},
-            {"name": "license_number", "type": "string"},
-            {"name": "status", "type": "string"},
-            {"name": "created_at", "type": "dateTime"},
-            {"name": "updated_at", "type": "dateTime"}
+        "tableName": "drivepilot_drivers",
+        "columns": {
+          "column": [
+            {
+              "name": "driver_id",
+              "type": "string"
+            },
+            {
+              "name": "email",
+              "type": "string"
+            },
+            {
+              "name": "first_name",
+              "type": "string"
+            },
+            {
+              "name": "last_name",
+              "type": "string"
+            },
+            {
+              "name": "phone",
+              "type": "string"
+            },
+            {
+              "name": "license_number",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "created_at",
+              "type": "string"
+            },
+            {
+              "name": "updated_at",
+              "type": "string"
+            }
           ]
+        },
+        "options": {
+          "createIfNotExists": true
         }
-      },
-      "id": "create-drivers",
-      "name": "Create Drivers DataStore",
-      "type": "n8n-nodes-base.dataStore",
-      "typeVersion": 1,
-      "position": [460, 300]
+      }
     }
   ],
   "connections": {
     "Manual Trigger": {
-      "main": [[{"node": "Create Drivers DataStore", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Create Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
-  }
+  },
+  "active": false
 }

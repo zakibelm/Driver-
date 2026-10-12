@@ -1,41 +1,84 @@
 {
-  "name": "🚖 Co-op Taxi - Create Services Table",
+  "name": "DrivePilot - Create services",
   "nodes": [
     {
-      "parameters": {},
-      "id": "manual-trigger-2",
+      "id": "manual",
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [240, 300]
+      "parameters": {},
+      "position": [
+        0,
+        0
+      ]
     },
     {
+      "id": "create-table",
+      "name": "Create Table",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        250,
+        0
+      ],
       "parameters": {
+        "resource": "table",
         "operation": "create",
-        "dataStore": "services",
-        "columnDefinitions": {
-          "columns": [
-            {"name": "id", "type": "string"},
-            {"name": "driver_email", "type": "string"},
-            {"name": "type", "type": "string"},
-            {"name": "amount", "type": "number"},
-            {"name": "date", "type": "dateTime"},
-            {"name": "description", "type": "string"},
-            {"name": "created_at", "type": "dateTime"},
-            {"name": "updated_at", "type": "dateTime"}
+        "tableName": "drivepilot_services",
+        "columns": {
+          "column": [
+            {
+              "name": "service_id",
+              "type": "string"
+            },
+            {
+              "name": "driver_email",
+              "type": "string"
+            },
+            {
+              "name": "type",
+              "type": "string"
+            },
+            {
+              "name": "amount",
+              "type": "number"
+            },
+            {
+              "name": "date",
+              "type": "string"
+            },
+            {
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "name": "created_at",
+              "type": "string"
+            },
+            {
+              "name": "updated_at",
+              "type": "string"
+            }
           ]
+        },
+        "options": {
+          "createIfNotExists": true
         }
-      },
-      "id": "create-services",
-      "name": "Create Services DataStore",
-      "type": "n8n-nodes-base.dataStore",
-      "typeVersion": 1,
-      "position": [460, 300]
+      }
     }
   ],
   "connections": {
     "Manual Trigger": {
-      "main": [[{"node": "Create Services DataStore", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Create Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
-  }
+  },
+  "active": false
 }

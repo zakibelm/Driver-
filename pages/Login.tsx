@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { backend } from '../services/storage';
 import { UserSession } from '../types';
-import { Car, Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight } from 'lucide-react';
 
 interface LoginProps {
   onLogin: (session: UserSession) => void;
@@ -11,27 +11,30 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
     try {
-      const session = await backend.login(email);
+      const session = await backend.login(email, password);
       onLogin(session);
     } catch (error) {
-      alert("Erreur de connexion");
+      setError(error instanceof Error ? error.message : 'Connexion impossible. Réessayez.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDemoLogin = async () => {
+    setError('');
     setLoading(true);
     try {
-      const session = await backend.login('demo@cooptaxi.com');
+      const session = await backend.loginDemo();
       onLogin(session);
     } catch (error) {
-      alert("Erreur de connexion démo");
+      setError('Connexion démo indisponible. Réessayez.');
     } finally {
       setLoading(false);
     }
@@ -39,22 +42,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Header Image Area */}
-      <div className="relative h-64 bg-slate-900 w-full overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60 z-10"></div>
+      {/* DrivePilot brand */}
+      <div className="h-64 bg-white w-full flex items-center justify-center px-6 pb-10">
         <img 
-            src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=2070&auto=format&fit=crop" 
-            alt="Taxi City" 
-            className="w-full h-full object-cover opacity-80"
+            src="/drivepilot-logo.png"
+            alt="DrivePilot"
+            className="w-full max-w-sm h-44 object-contain"
         />
-        <div className="absolute top-6 left-6 z-20">
-            <div className="flex items-center gap-2">
-                <div className="bg-red-600 p-1.5 rounded-lg">
-                    <Car className="text-white" size={20} />
-                </div>
-                <span className="text-white font-bold tracking-wide text-sm">CO-OP TAXI</span>
-            </div>
-        </div>
       </div>
 
       {/* Login Form Container - Overlapping */}
@@ -66,21 +60,28 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
+                {error && <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-xl p-3">{error}</p>}
                 <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5 ml-1">Courriel</label>
+                    <label htmlFor="login-identifier" className="block text-xs font-semibold text-slate-500 uppercase mb-1.5 ml-1">Courriel ou nom d’utilisateur</label>
                     <input 
-                        type="email" 
+                        id="login-identifier"
+                        type="text"
+                        autoComplete="username"
+                        autoCapitalize="none"
+                        spellCheck={false}
                         required 
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-red-500 text-slate-900 font-medium placeholder-slate-400 outline-none transition-all"
-                        placeholder="driver@coop.com"
+                        placeholder="Courriel ou nom d’utilisateur"
                     />
                 </div>
                 <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5 ml-1">Mot de passe</label>
+                    <label htmlFor="login-password" className="block text-xs font-semibold text-slate-500 uppercase mb-1.5 ml-1">Mot de passe</label>
                     <input 
                         type="password" 
+                        id="login-password"
+                        autoComplete="current-password"
                         required 
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}

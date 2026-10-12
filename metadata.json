@@ -1,5 +1,5 @@
 {
-  "name": "Co-op Taxi Terrebonne Manager",
+  "name": "DrivePilot",
   "description": "A comprehensive taxi management dashboard featuring service tracking, analytics, and AI-driven insights simulating an n8n Data Table backend.",
   "requestFramePermissions": []
 }

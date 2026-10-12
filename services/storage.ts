@@ -35,15 +35,38 @@ class BackendService {
   }
 
   // --- Auth ---
-  async login(email: string): Promise<UserSession> {
+  async login(identifier: string, password: string): Promise<UserSession> {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ identifier, password })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Connexion impossible.');
+    return data;
+  }
+
+  async getSession(): Promise<UserSession | null> {
+    const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
+    if (response.status === 401) return null;
+    if (!response.ok) throw new Error('Session indisponible.');
+    return response.json();
+  }
+
+  async logout(): Promise<void> {
+    const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+    if (!response.ok) throw new Error('Déconnexion impossible.');
+  }
+
+  async loginDemo(): Promise<UserSession> {
+    await this.logout();
     await this.delay();
-    // For demo purposes, any login works
     return {
-      token: 'mock-jwt-token-' + Date.now(),
       user: {
         id: MOCK_DRIVER.id,
-        email: email,
-        name: email.includes('demo') ? 'Demo Driver' : `${MOCK_DRIVER.first_name} ${MOCK_DRIVER.last_name}`,
+        email: 'demo@cooptaxi.com',
+        name: 'Demo Driver',
         role: 'chauffeur'
       }
     };
@@ -186,7 +209,7 @@ class BackendService {
                     "Authorization": `Bearer ${settings.openRouterApiKey}`,
                     "Content-Type": "application/json",
                     "HTTP-Referer": window.location.origin, // Required by OpenRouter
-                    "X-Title": "Co-op Taxi Dashboard"
+                    "X-Title": "DrivePilot"
                 },
                 body: JSON.stringify({
                     "model": settings.model,
@@ -218,7 +241,7 @@ class BackendService {
         if (lowerMsg.includes('revenu') || lowerMsg.includes('argent') || lowerMsg.includes('gagné')) {
             aiResponse = `(Mode Démo) D'après vos données récentes, vos revenus sont stables. Le secteur Olymel semble le plus performant cette semaine. Configurer une clé API pour une vraie analyse.`;
         } else if (lowerMsg.includes('bonjour') || lowerMsg.includes('salut')) {
-            aiResponse = "(Mode Démo) Bonjour ! Je suis l'assistant IA de Co-op Taxi Terrebonne. Configurez ma clé API dans les paramètres pour m'activer pleinement.";
+            aiResponse = "(Mode Démo) Bonjour ! Je suis l'assistant IA de DrivePilot. Configurez ma clé API dans les paramètres pour m'activer pleinement.";
         } else {
             aiResponse = "(Mode Démo) Je suis en mode simulation. Veuillez entrer une clé OpenRouter dans les paramètres pour activer l'intelligence réelle.";
         }

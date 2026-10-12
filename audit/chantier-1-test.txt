@@ -1,0 +1,15 @@
+
+> drivepilot@0.0.0 test
+> node --test server/
+
+✔ admin authentication, session, logout and rejection paths (8132.9608ms)
+✔ webhook credential references and validation before data access (22.7791ms)
+✔ strict service validation and canonical service types (3.8283ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9279.9244
