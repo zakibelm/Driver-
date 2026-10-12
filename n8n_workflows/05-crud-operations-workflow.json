@@ -1,204 +1,971 @@
 {
-  "name": "🔧 Co-op Taxi - CRUD Operations Complete",
+  "name": "DrivePilot - Authenticated CRUD",
   "nodes": [
     {
+      "name": "Webhook Create Driver",
+      "id": "webhook-create-driver",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
       "parameters": {
         "httpMethod": "POST",
         "path": "api/drivers/create",
-        "responseMode": "responseNode"
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "webhook-create-driver",
-      "name": "Webhook Create Driver",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1.1,
-      "position": [240, 300]
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "DrivePilot Header Auth"
+        }
+      }
     },
     {
-      "parameters": {
-        "jsCode": "const { randomUUID } = require('crypto');\n\nreturn {\n  json: {\n    id: randomUUID(),\n    email: $input.item.json.email,\n    password_hash: $input.item.json.password_hash,\n    first_name: $input.item.json.first_name,\n    last_name: $input.item.json.last_name,\n    phone: $input.item.json.phone || '',\n    license_number: $input.item.json.license_number,\n    status: 'active',\n    created_at: new Date().toISOString(),\n    updated_at: new Date().toISOString()\n  }\n};"
-      },
-      "id": "prep-driver",
-      "name": "Prepare Driver",
+      "name": "Validate Create Driver",
+      "id": "validate-create-driver",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 300]
-    },
-    {
       "parameters": {
-        "operation": "insert",
-        "dataStore": "drivers",
-        "columnsToSend": "specifyColumns",
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "id": "={{ $json.id }}",
-            "email": "={{ $json.email }}",
-            "password_hash": "={{ $json.password_hash }}",
-            "first_name": "={{ $json.first_name }}",
-            "last_name": "={{ $json.last_name }}",
-            "phone": "={{ $json.phone }}",
-            "license_number": "={{ $json.license_number }}",
-            "status": "={{ $json.status }}",
-            "created_at": "={{ $json.created_at }}",
-            "updated_at": "={{ $json.updated_at }}"
-          }
-        }
+        "jsCode": "const SERVICE_TYPES = ['Regular', 'TCT', 'Olymel', 'Bombardier', 'Handami', 'James Miron'];\nfunction object(value, keys) {\n  if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(k => !keys.includes(k))) throw new Error('Champs invalides ou inconnus.');\n}\nfunction text(value, max, required = true) {\n  if (typeof value !== 'string' || value.length > max || (required && !value.trim())) throw new Error('Texte invalide.');\n  return value.trim();\n}\nfunction email(value) {\n  const result = text(value, 254).toLowerCase();\n  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(result)) throw new Error('Courriel invalide.');\n  return result;\n}\nfunction serviceInput(value, withOwner = false) {\n  object(value, ['type', 'amount', 'date', 'description', ...(withOwner ? ['driver_email'] : [])]);\n  if (!SERVICE_TYPES.includes(value.type)) throw new Error('Type invalide.');\n  if (typeof value.amount !== 'number' || !Number.isFinite(value.amount) || value.amount <= 0 || value.amount > 10000) throw new Error('Montant entre 0 et 10 000 $ requis.');\n  if (typeof value.date !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$/.test(value.date) || !Number.isFinite(Date.parse(value.date)) || new Date(value.date).toISOString().replace('.000Z','Z') !== value.date.replace('.000Z','Z')) throw new Error('Date ISO UTC valide requise.');\n  return { type: value.type, amount: value.amount, date: value.date, description: text(value.description ?? '', 500, false), ...(withOwner ? { driver_email: email(value.driver_email) } : {}) };\n}\nfunction serviceId(value) {\n  if (typeof value !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value)) throw new Error('Identifiant invalide.');\n  return value;\n}\nfunction driverInput(value) {\n  object(value, ['email', 'first_name', 'last_name', 'phone', 'license_number']);\n  return { email: email(value.email), first_name: text(value.first_name, 100), last_name: text(value.last_name, 100), phone: text(value.phone ?? '', 30, false), license_number: text(value.license_number, 100) };\n}\n\nconst input = $input.first().json;\ntry { const data = driverInput(input.body); return [{json:{valid:true,data}}]; } catch { return [{json:{valid:false,error:\"Entrée invalide.\"}}]; }"
       },
-      "id": "insert-driver",
-      "name": "Insert Driver",
-      "type": "n8n-nodes-base.dataStore",
-      "typeVersion": 1,
-      "position": [680, 300]
+      "position": [
+        220,
+        0
+      ]
     },
     {
+      "name": "Valid Create Driver",
+      "id": "valid-create-driver",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "name": "Bad Create Driver",
+      "id": "bad-create-driver",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ { success: true, driver: $json } }}"
+        "responseBody": "={{ { error: \"Entrée invalide.\" } }}",
+        "options": {
+          "responseCode": 400
+        }
       },
-      "id": "respond-driver",
-      "name": "Respond Driver",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [900, 300]
+      "position": [
+        660,
+        140
+      ]
     },
     {
+      "name": "Prepare Create Driver",
+      "id": "prepare-create-driver",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const { randomUUID } = require('crypto'); return [{json:{...$input.first().json.data, driver_id:randomUUID(), created_at:new Date().toISOString(), updated_at:new Date().toISOString(), status:'active'}}];"
+      },
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "name": "Store Create Driver",
+      "id": "store-create-driver",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $vars.DRIVEPILOT_DRIVERS_TABLE_ID }}"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        }
+      },
+      "position": [
+        880,
+        0
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Respond Create Driver",
+      "id": "respond-create-driver",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({success:true,driver:{id:$json.driver_id,email:$json.email}}) }}",
+        "options": {
+          "responseCode": 201
+        }
+      },
+      "position": [
+        1100,
+        0
+      ]
+    },
+    {
+      "name": "Webhook Create Service",
+      "id": "webhook-create-service",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
       "parameters": {
         "httpMethod": "POST",
         "path": "api/services/create",
-        "responseMode": "responseNode"
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "webhook-create-service",
-      "name": "Webhook Create Service",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1.1,
-      "position": [240, 500]
+      "position": [
+        0,
+        320
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "DrivePilot Header Auth"
+        }
+      }
     },
     {
-      "parameters": {
-        "jsCode": "const { randomUUID } = require('crypto');\n\nreturn {\n  json: {\n    id: randomUUID(),\n    driver_email: $input.item.json.driver_email,\n    type: $input.item.json.type,\n    amount: parseFloat($input.item.json.amount),\n    date: new Date($input.item.json.date).toISOString(),\n    description: $input.item.json.description || '',\n    created_at: new Date().toISOString(),\n    updated_at: new Date().toISOString()\n  }\n};"
-      },
-      "id": "prep-service",
-      "name": "Prepare Service",
+      "name": "Validate Create Service",
+      "id": "validate-create-service",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 500]
-    },
-    {
       "parameters": {
-        "operation": "insert",
-        "dataStore": "services",
-        "columnsToSend": "specifyColumns",
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "id": "={{ $json.id }}",
-            "driver_email": "={{ $json.driver_email }}",
-            "type": "={{ $json.type }}",
-            "amount": "={{ $json.amount }}",
-            "date": "={{ $json.date }}",
-            "description": "={{ $json.description }}",
-            "created_at": "={{ $json.created_at }}",
-            "updated_at": "={{ $json.updated_at }}"
-          }
-        }
+        "jsCode": "const SERVICE_TYPES = ['Regular', 'TCT', 'Olymel', 'Bombardier', 'Handami', 'James Miron'];\nfunction object(value, keys) {\n  if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(k => !keys.includes(k))) throw new Error('Champs invalides ou inconnus.');\n}\nfunction text(value, max, required = true) {\n  if (typeof value !== 'string' || value.length > max || (required && !value.trim())) throw new Error('Texte invalide.');\n  return value.trim();\n}\nfunction email(value) {\n  const result = text(value, 254).toLowerCase();\n  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(result)) throw new Error('Courriel invalide.');\n  return result;\n}\nfunction serviceInput(value, withOwner = false) {\n  object(value, ['type', 'amount', 'date', 'description', ...(withOwner ? ['driver_email'] : [])]);\n  if (!SERVICE_TYPES.includes(value.type)) throw new Error('Type invalide.');\n  if (typeof value.amount !== 'number' || !Number.isFinite(value.amount) || value.amount <= 0 || value.amount > 10000) throw new Error('Montant entre 0 et 10 000 $ requis.');\n  if (typeof value.date !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$/.test(value.date) || !Number.isFinite(Date.parse(value.date)) || new Date(value.date).toISOString().replace('.000Z','Z') !== value.date.replace('.000Z','Z')) throw new Error('Date ISO UTC valide requise.');\n  return { type: value.type, amount: value.amount, date: value.date, description: text(value.description ?? '', 500, false), ...(withOwner ? { driver_email: email(value.driver_email) } : {}) };\n}\nfunction serviceId(value) {\n  if (typeof value !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value)) throw new Error('Identifiant invalide.');\n  return value;\n}\nfunction driverInput(value) {\n  object(value, ['email', 'first_name', 'last_name', 'phone', 'license_number']);\n  return { email: email(value.email), first_name: text(value.first_name, 100), last_name: text(value.last_name, 100), phone: text(value.phone ?? '', 30, false), license_number: text(value.license_number, 100) };\n}\n\nconst input = $input.first().json;\ntry { const data = serviceInput(input.body, true); return [{json:{valid:true,data}}]; } catch { return [{json:{valid:false,error:\"Entrée invalide.\"}}]; }"
       },
-      "id": "insert-service",
-      "name": "Insert Service",
-      "type": "n8n-nodes-base.dataStore",
-      "typeVersion": 1,
-      "position": [680, 500]
+      "position": [
+        220,
+        320
+      ]
     },
     {
+      "name": "Valid Create Service",
+      "id": "valid-create-service",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        320
+      ]
+    },
+    {
+      "name": "Bad Create Service",
+      "id": "bad-create-service",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ { success: true, service: $json } }}"
+        "responseBody": "={{ { error: \"Entrée invalide.\" } }}",
+        "options": {
+          "responseCode": 400
+        }
       },
-      "id": "respond-service",
-      "name": "Respond Service",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [900, 500]
+      "position": [
+        660,
+        460
+      ]
     },
     {
+      "name": "Prepare Create Service",
+      "id": "prepare-create-service",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const { randomUUID } = require('crypto'); return [{json:{...$input.first().json.data, service_id:randomUUID(), created_at:new Date().toISOString(), updated_at:new Date().toISOString()}}];"
+      },
+      "position": [
+        660,
+        320
+      ]
+    },
+    {
+      "name": "Store Create Service",
+      "id": "store-create-service",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $vars.DRIVEPILOT_SERVICES_TABLE_ID }}"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        }
+      },
+      "position": [
+        880,
+        320
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Respond Create Service",
+      "id": "respond-create-service",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({success:true,service:{...$json,id:$json.service_id}}) }}",
+        "options": {
+          "responseCode": 201
+        }
+      },
+      "position": [
+        1100,
+        320
+      ]
+    },
+    {
+      "name": "Webhook List Services",
+      "id": "webhook-list-services",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
       "parameters": {
         "httpMethod": "GET",
         "path": "api/services/list/:email",
-        "responseMode": "responseNode"
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "webhook-list-services",
-      "name": "Webhook List Services",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1.1,
-      "position": [240, 700]
-    },
-    {
-      "parameters": {
-        "operation": "getAll",
-        "dataStore": "services",
-        "returnAll": false,
-        "limit": 50,
-        "options": {
-          "filters": {
-            "conditions": [
-              {
-                "keyName": "driver_email",
-                "operation": "equal",
-                "value": "={{ $parameter[\"path\"][\"email\"] }}"
-              }
-            ]
-          },
-          "sort": {
-            "sortFields": [
-              {
-                "fieldName": "created_at",
-                "order": "descending"
-              }
-            ]
-          }
+      "position": [
+        0,
+        640
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "DrivePilot Header Auth"
         }
-      },
-      "id": "get-services",
-      "name": "Get Services",
-      "type": "n8n-nodes-base.dataStore",
-      "typeVersion": 1,
-      "position": [460, 700]
+      }
     },
     {
+      "name": "Validate List Services",
+      "id": "validate-list-services",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const SERVICE_TYPES = ['Regular', 'TCT', 'Olymel', 'Bombardier', 'Handami', 'James Miron'];\nfunction object(value, keys) {\n  if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(k => !keys.includes(k))) throw new Error('Champs invalides ou inconnus.');\n}\nfunction text(value, max, required = true) {\n  if (typeof value !== 'string' || value.length > max || (required && !value.trim())) throw new Error('Texte invalide.');\n  return value.trim();\n}\nfunction email(value) {\n  const result = text(value, 254).toLowerCase();\n  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(result)) throw new Error('Courriel invalide.');\n  return result;\n}\nfunction serviceInput(value, withOwner = false) {\n  object(value, ['type', 'amount', 'date', 'description', ...(withOwner ? ['driver_email'] : [])]);\n  if (!SERVICE_TYPES.includes(value.type)) throw new Error('Type invalide.');\n  if (typeof value.amount !== 'number' || !Number.isFinite(value.amount) || value.amount <= 0 || value.amount > 10000) throw new Error('Montant entre 0 et 10 000 $ requis.');\n  if (typeof value.date !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$/.test(value.date) || !Number.isFinite(Date.parse(value.date)) || new Date(value.date).toISOString().replace('.000Z','Z') !== value.date.replace('.000Z','Z')) throw new Error('Date ISO UTC valide requise.');\n  return { type: value.type, amount: value.amount, date: value.date, description: text(value.description ?? '', 500, false), ...(withOwner ? { driver_email: email(value.driver_email) } : {}) };\n}\nfunction serviceId(value) {\n  if (typeof value !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value)) throw new Error('Identifiant invalide.');\n  return value;\n}\nfunction driverInput(value) {\n  object(value, ['email', 'first_name', 'last_name', 'phone', 'license_number']);\n  return { email: email(value.email), first_name: text(value.first_name, 100), last_name: text(value.last_name, 100), phone: text(value.phone ?? '', 30, false), license_number: text(value.license_number, 100) };\n}\n\nconst input = $input.first().json;\ntry { object(input.query ?? {}, []); const data = {email:email(input.params.email)}; return [{json:{valid:true,data}}]; } catch { return [{json:{valid:false,error:\"Entrée invalide.\"}}]; }"
+      },
+      "position": [
+        220,
+        640
+      ]
+    },
+    {
+      "name": "Valid List Services",
+      "id": "valid-list-services",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        640
+      ]
+    },
+    {
+      "name": "Bad List Services",
+      "id": "bad-list-services",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ { success: true, services: $json } }}"
+        "responseBody": "={{ { error: \"Entrée invalide.\" } }}",
+        "options": {
+          "responseCode": 400
+        }
       },
-      "id": "respond-services",
-      "name": "Respond Services",
+      "position": [
+        660,
+        780
+      ]
+    },
+    {
+      "name": "Store List Services",
+      "id": "store-list-services",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $vars.DRIVEPILOT_SERVICES_TABLE_ID }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "driver_email",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.email }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "position": [
+        880,
+        640
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Respond List Services",
+      "id": "respond-list-services",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [680, 700]
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({success:true,services:$input.all().map(x=>x.json).filter(x=>x.service_id).map(x=>({...x,id:x.service_id}))}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1100,
+        640
+      ]
+    },
+    {
+      "name": "Webhook List All Services",
+      "id": "webhook-list-all-services",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "api/services/all",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        960
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "DrivePilot Header Auth"
+        }
+      }
+    },
+    {
+      "name": "Validate List All Services",
+      "id": "validate-list-all-services",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const SERVICE_TYPES = ['Regular', 'TCT', 'Olymel', 'Bombardier', 'Handami', 'James Miron'];\nfunction object(value, keys) {\n  if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(k => !keys.includes(k))) throw new Error('Champs invalides ou inconnus.');\n}\nfunction text(value, max, required = true) {\n  if (typeof value !== 'string' || value.length > max || (required && !value.trim())) throw new Error('Texte invalide.');\n  return value.trim();\n}\nfunction email(value) {\n  const result = text(value, 254).toLowerCase();\n  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(result)) throw new Error('Courriel invalide.');\n  return result;\n}\nfunction serviceInput(value, withOwner = false) {\n  object(value, ['type', 'amount', 'date', 'description', ...(withOwner ? ['driver_email'] : [])]);\n  if (!SERVICE_TYPES.includes(value.type)) throw new Error('Type invalide.');\n  if (typeof value.amount !== 'number' || !Number.isFinite(value.amount) || value.amount <= 0 || value.amount > 10000) throw new Error('Montant entre 0 et 10 000 $ requis.');\n  if (typeof value.date !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$/.test(value.date) || !Number.isFinite(Date.parse(value.date)) || new Date(value.date).toISOString().replace('.000Z','Z') !== value.date.replace('.000Z','Z')) throw new Error('Date ISO UTC valide requise.');\n  return { type: value.type, amount: value.amount, date: value.date, description: text(value.description ?? '', 500, false), ...(withOwner ? { driver_email: email(value.driver_email) } : {}) };\n}\nfunction serviceId(value) {\n  if (typeof value !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value)) throw new Error('Identifiant invalide.');\n  return value;\n}\nfunction driverInput(value) {\n  object(value, ['email', 'first_name', 'last_name', 'phone', 'license_number']);\n  return { email: email(value.email), first_name: text(value.first_name, 100), last_name: text(value.last_name, 100), phone: text(value.phone ?? '', 30, false), license_number: text(value.license_number, 100) };\n}\n\nconst input = $input.first().json;\ntry { object(input.query ?? {}, []); const data = {}; return [{json:{valid:true,data}}]; } catch { return [{json:{valid:false,error:\"Entrée invalide.\"}}]; }"
+      },
+      "position": [
+        220,
+        960
+      ]
+    },
+    {
+      "name": "Valid List All Services",
+      "id": "valid-list-all-services",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        960
+      ]
+    },
+    {
+      "name": "Bad List All Services",
+      "id": "bad-list-all-services",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { error: \"Entrée invalide.\" } }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        1100
+      ]
+    },
+    {
+      "name": "Store List All Services",
+      "id": "store-list-all-services",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $vars.DRIVEPILOT_SERVICES_TABLE_ID }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": []
+        },
+        "returnAll": true
+      },
+      "position": [
+        880,
+        960
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Respond List All Services",
+      "id": "respond-list-all-services",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({success:true,services:$input.all().map(x=>x.json).filter(x=>x.service_id).map(x=>({...x,id:x.service_id}))}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1100,
+        960
+      ]
+    },
+    {
+      "name": "Webhook Delete Service",
+      "id": "webhook-delete-service",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "DELETE",
+        "path": "api/services/delete/:id",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        1280
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "DrivePilot Header Auth"
+        }
+      }
+    },
+    {
+      "name": "Validate Delete Service",
+      "id": "validate-delete-service",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const SERVICE_TYPES = ['Regular', 'TCT', 'Olymel', 'Bombardier', 'Handami', 'James Miron'];\nfunction object(value, keys) {\n  if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(k => !keys.includes(k))) throw new Error('Champs invalides ou inconnus.');\n}\nfunction text(value, max, required = true) {\n  if (typeof value !== 'string' || value.length > max || (required && !value.trim())) throw new Error('Texte invalide.');\n  return value.trim();\n}\nfunction email(value) {\n  const result = text(value, 254).toLowerCase();\n  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(result)) throw new Error('Courriel invalide.');\n  return result;\n}\nfunction serviceInput(value, withOwner = false) {\n  object(value, ['type', 'amount', 'date', 'description', ...(withOwner ? ['driver_email'] : [])]);\n  if (!SERVICE_TYPES.includes(value.type)) throw new Error('Type invalide.');\n  if (typeof value.amount !== 'number' || !Number.isFinite(value.amount) || value.amount <= 0 || value.amount > 10000) throw new Error('Montant entre 0 et 10 000 $ requis.');\n  if (typeof value.date !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$/.test(value.date) || !Number.isFinite(Date.parse(value.date)) || new Date(value.date).toISOString().replace('.000Z','Z') !== value.date.replace('.000Z','Z')) throw new Error('Date ISO UTC valide requise.');\n  return { type: value.type, amount: value.amount, date: value.date, description: text(value.description ?? '', 500, false), ...(withOwner ? { driver_email: email(value.driver_email) } : {}) };\n}\nfunction serviceId(value) {\n  if (typeof value !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value)) throw new Error('Identifiant invalide.');\n  return value;\n}\nfunction driverInput(value) {\n  object(value, ['email', 'first_name', 'last_name', 'phone', 'license_number']);\n  return { email: email(value.email), first_name: text(value.first_name, 100), last_name: text(value.last_name, 100), phone: text(value.phone ?? '', 30, false), license_number: text(value.license_number, 100) };\n}\n\nconst input = $input.first().json;\ntry { object(input.body, [\"driver_email\"]); const data = { id:serviceId(input.params.id), driver_email:email(input.body.driver_email) }; return [{json:{valid:true,data}}]; } catch { return [{json:{valid:false,error:\"Entrée invalide.\"}}]; }"
+      },
+      "position": [
+        220,
+        1280
+      ]
+    },
+    {
+      "name": "Valid Delete Service",
+      "id": "valid-delete-service",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        1280
+      ]
+    },
+    {
+      "name": "Bad Delete Service",
+      "id": "bad-delete-service",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { error: \"Entrée invalide.\" } }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        1420
+      ]
+    },
+    {
+      "name": "Store Delete Service",
+      "id": "store-delete-service",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $vars.DRIVEPILOT_SERVICES_TABLE_ID }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "service_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.id }}"
+            },
+            {
+              "keyName": "driver_email",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.driver_email }}"
+            }
+          ]
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "position": [
+        880,
+        1280
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Respond Delete Service",
+      "id": "respond-delete-service",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({success:true}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1100,
+        1280
+      ]
     }
   ],
   "connections": {
     "Webhook Create Driver": {
-      "main": [[{"node": "Prepare Driver", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Validate Create Driver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Prepare Driver": {
-      "main": [[{"node": "Insert Driver", "type": "main", "index": 0}]]
+    "Validate Create Driver": {
+      "main": [
+        [
+          {
+            "node": "Valid Create Driver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Insert Driver": {
-      "main": [[{"node": "Respond Driver", "type": "main", "index": 0}]]
+    "Valid Create Driver": {
+      "main": [
+        [
+          {
+            "node": "Prepare Create Driver",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Create Driver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Create Driver": {
+      "main": [
+        [
+          {
+            "node": "Store Create Driver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Create Driver": {
+      "main": [
+        [
+          {
+            "node": "Respond Create Driver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Webhook Create Service": {
-      "main": [[{"node": "Prepare Service", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Validate Create Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Prepare Service": {
-      "main": [[{"node": "Insert Service", "type": "main", "index": 0}]]
+    "Validate Create Service": {
+      "main": [
+        [
+          {
+            "node": "Valid Create Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Insert Service": {
-      "main": [[{"node": "Respond Service", "type": "main", "index": 0}]]
+    "Valid Create Service": {
+      "main": [
+        [
+          {
+            "node": "Prepare Create Service",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Create Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Create Service": {
+      "main": [
+        [
+          {
+            "node": "Store Create Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Create Service": {
+      "main": [
+        [
+          {
+            "node": "Respond Create Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Webhook List Services": {
-      "main": [[{"node": "Get Services", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Validate List Services",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Get Services": {
-      "main": [[{"node": "Respond Services", "type": "main", "index": 0}]]
+    "Validate List Services": {
+      "main": [
+        [
+          {
+            "node": "Valid List Services",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid List Services": {
+      "main": [
+        [
+          {
+            "node": "Store List Services",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad List Services",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store List Services": {
+      "main": [
+        [
+          {
+            "node": "Respond List Services",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook List All Services": {
+      "main": [
+        [
+          {
+            "node": "Validate List All Services",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate List All Services": {
+      "main": [
+        [
+          {
+            "node": "Valid List All Services",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid List All Services": {
+      "main": [
+        [
+          {
+            "node": "Store List All Services",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad List All Services",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store List All Services": {
+      "main": [
+        [
+          {
+            "node": "Respond List All Services",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Delete Service": {
+      "main": [
+        [
+          {
+            "node": "Validate Delete Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Delete Service": {
+      "main": [
+        [
+          {
+            "node": "Valid Delete Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Delete Service": {
+      "main": [
+        [
+          {
+            "node": "Store Delete Service",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Delete Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Delete Service": {
+      "main": [
+        [
+          {
+            "node": "Respond Delete Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
-  }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
 }
