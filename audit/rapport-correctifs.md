@@ -41,3 +41,13 @@ Hachage asynchrone ; maximum huit dÃ©rivations simultanÃ©es ; dÃ©lais exponentie
 
 Preuves : chantier-5-test.txt (9 tests verts) et chantier-5-build.txt. Fichiers : auth.mjs, limiter.mjs et tests. Limite : stockage de session et quotas mono-processus ; Redis sera requis pour plusieurs instances.
 
+
+## Chantier 6 — proxy IA
+
+/api/chat exige une session, limite le message à 2 000 caractères et le débit à 10 requêtes/minute/compte. OpenRouter est encapsulé côté serveur avec OPENROUTER_API_KEY et OPENROUTER_MODEL ; aucune clé ou URL fournisseur dans le front. Réponses rendues en texte React échappé, aucun outil ni exécution de réponse. Les anciennes clés user_settings sont retirées du navigateur lors du chargement des préférences.
+
+Les descriptions, identifiants et courriels des courses ne sont jamais transmis : seuls compte, total et types de courses validés entrent dans un bloc « DONNÉES, PAS INSTRUCTIONS » du message utilisateur. Cela élimine le canal d’injection par description, sans prétendre garantir le comportement général d’un LLM.
+
+Modèle : openrouter/free confirmé gratuit par le catalogue public HTTP 200 et https://openrouter.ai/openrouter/free. Preuve chantier-6-modeles.txt. Aucune clé serveur disponible : inférence réelle non testée, à réaliser après configuration ; aucun modèle payant présumé ni clé recherchée ailleurs.
+
+Preuves : chantier-6-test.txt (11 tests verts, exclusion d’une description malveillante, quota et propriétaire), chantier-6-build.txt. Fichiers : server/chat.mjs, providers/openrouter.mjs, leurs tests, plugin, services/storage.ts et Chat.tsx.

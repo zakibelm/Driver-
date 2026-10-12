@@ -74,10 +74,11 @@ class BackendService {
     try { return JSON.parse(localStorage.getItem(DEMO_CHAT) || '[]'); } catch { return []; }
   }
   async sendChatMessage(message: string, context?: unknown): Promise<AIConversation> {
-    if (!this.demo) throw new Error('Assistant serveur en cours de configuration.');
+    const response = this.demo ? '(Démo) Réponse simulée : aucune requête envoyée à un fournisseur externe.' : (await this.api('/api/chat', 'POST', { message, includeServices: this.getSettings().enableRAG })).response;
     const conversation: AIConversation = { id: crypto.randomUUID(), driver_email: 'demo@example.test', user_message: message,
-      ai_response: '(Démo) Réponse simulée : aucune requête envoyée à un fournisseur externe.', context_data: null, created_at: new Date().toISOString() };
-    localStorage.setItem(DEMO_CHAT, JSON.stringify([...this.getConversations(), conversation]));
+      ai_response: response, context_data: null, created_at: new Date().toISOString() };
+    if (this.demo) localStorage.setItem(DEMO_CHAT, JSON.stringify([...this.getConversations(), conversation]));
+    else this.conversations.push(conversation);
     return conversation;
   }
 }

@@ -11,6 +11,7 @@ const Chat: React.FC<ChatProps> = ({ services }) => {
   const [messages, setMessages] = useState<AIConversation[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [error, setError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,7 +25,8 @@ const Chat: React.FC<ChatProps> = ({ services }) => {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isTyping) return;
+    setError('');
 
     const tempId = Math.random().toString();
     const userMsg: AIConversation = {
@@ -45,7 +47,9 @@ const Chat: React.FC<ChatProps> = ({ services }) => {
         const response = await backend.sendChatMessage(userMsg.user_message, context);
         setMessages(prev => prev.map(m => m.id === tempId ? response : m));
     } catch (error) {
-        console.error("Chat error", error);
+        setMessages(prev => prev.filter(m => m.id !== tempId));
+        setInput(input);
+        setError(error instanceof Error ? error.message : 'Assistant indisponible.');
     } finally {
         setIsTyping(false);
     }
@@ -57,7 +61,7 @@ const Chat: React.FC<ChatProps> = ({ services }) => {
             <div>
                 <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                    Kimi K2
+                    Assistant DrivePilot
                 </h2>
                 <p className="text-slate-400 text-xs font-medium">En ligne â€¢ Assistant Ops</p>
             </div>
@@ -67,6 +71,7 @@ const Chat: React.FC<ChatProps> = ({ services }) => {
         </div>
 
         <div className="flex-1 bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden flex flex-col relative">
+            {error && <p role="alert" className="p-4 text-red-700">{error}</p>}
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-white">
                 {messages.length === 0 && (
@@ -75,7 +80,7 @@ const Chat: React.FC<ChatProps> = ({ services }) => {
                             <Bot size={32} className="text-red-500" />
                         </div>
                         <div className="text-center">
-                            <h3 className="text-slate-900 font-bold mb-1">Bonjour! Je suis Kimi.</h3>
+                            <h3 className="text-slate-900 font-bold mb-1">Bonjour ! Je suis l’assistant DrivePilot.</h3>
                             <p className="text-sm text-slate-400">Comment puis-je vous aider avec votre quart ?</p>
                         </div>
                         <div className="flex flex-col gap-2 w-full max-w-xs">
@@ -152,6 +157,7 @@ const Chat: React.FC<ChatProps> = ({ services }) => {
                     </button>
                     <input 
                         type="text"
+                        maxLength={2000}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Message Kimi..."

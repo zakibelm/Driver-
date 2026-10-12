@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "checked": "2026-10-12T02:15:19.708Z",
+  "freeRouter": true,
+  "freeModels": [
+    "inclusionai/ling-3.1-flash",
+    "apodex/apodex-1.1-mini:free",
+    "dots-studio/dots-3-note-preview:free",
+    "liquid/lfm-2.5-2.6b:free",
+    "nvidia/nemotron-3.5-lightning:free",
+    "thinkingmachines/inkling-small:free",
+    "poolside/laguna-s-2.1:free",
+    "thinkingmachines/inkling:free",
+    "poolside/laguna-xs-2.1:free",
+    "cohere/north-mini-code:free",
+    "nvidia/nemotron-3.5-content-safety:free",
+    "nvidia/nemotron-3-ultra-550b-a55b:free"
+  ],
+  "keyConfigured": false
+}
