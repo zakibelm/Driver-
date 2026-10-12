@@ -1,7 +1,16 @@
-import { Service, AIConversation, UserSession, UserSettings } from '../types';
+import { Service, ServiceTypeEntry, AIConversation, UserSession, UserSettings } from '../types';
 
 const DEMO_SERVICES = 'drivepilot_demo_services';
-const DEMO_CHAT = 'drivepilot_demo_chat';
+const DEMO_CHAT = 'drivepilot_demo_chat';
+const DEMO_TYPES = 'drivepilot_demo_types';
+export const DEFAULT_SERVICE_TYPES = ['Regular', 'TCT', 'Olymel', 'Bombardier', 'Handami', 'James Miron'];
+const TYPE_NAME = /^[\p{L}\p{N}][\p{L}\p{N} '&.\/-]*$/u;
+/** Même règle que le serveur : 1 à 40 caractères, lettres, chiffres, espaces et ' & . / - */
+export function normalizeTypeName(value: string): string {
+  const name = value.trim().replace(/\s+/g, ' ');
+  if (!name || name.length > 40 || !TYPE_NAME.test(name)) throw new Error('Nom invalide : 1 à 40 caractères, lettres, chiffres, espaces et \' & . / - seulement.');
+  return name;
+}
 const DEFAULT_SETTINGS: UserSettings = { enableRAG: true };
 class BackendService {  constructor() { localStorage.removeItem('user_settings'); }
   private demo = false;
@@ -60,6 +69,33 @@ class BackendService {  constructor() { localStorage.removeItem('user_settings'
     if (!this.demo) { await this.api('/api/services/' + encodeURIComponent(id), 'DELETE'); return; }
     localStorage.setItem(DEMO_SERVICES, JSON.stringify(this.demoRows().filter(s => s.id !== id)));
   }
+  // --- Types de service (admin ; en démo, modifiables localement) ---
+  private demoTypes(): ServiceTypeEntry[] {
+    try { const rows = JSON.parse(localStorage.getItem(DEMO_TYPES) || 'null'); if (Array.isArray(rows)) return rows; } catch {}
+    return DEFAULT_SERVICE_TYPES.map(name => ({ name, active: true }));
+  }
+  async getServiceTypes(): Promise<ServiceTypeEntry[]> {
+    if (this.demo) return this.demoTypes();
+    return (await this.api('/api/service-types')).types;
+  }
+  async addServiceType(value: string): Promise<ServiceTypeEntry[]> {
+    const name = normalizeTypeName(value);
+    if (!this.demo) return (await this.api('/api/service-types', 'POST', { name })).types;
+    const types = this.demoTypes();
+    const existing = types.find(t => t.name.toLowerCase() === name.toLowerCase());
+    if (existing?.active) throw new Error('Ce type existe déjà.');
+    const next = existing ? types.map(t => t === existing ? { ...t, active: true } : t) : [...types, { name, active: true }];
+    localStorage.setItem(DEMO_TYPES, JSON.stringify(next));
+    return next;
+  }
+  async setServiceTypeActive(name: string, active: boolean): Promise<ServiceTypeEntry[]> {
+    if (!this.demo) return (await this.api('/api/service-types', 'PUT', { name, active })).types;
+    const types = this.demoTypes();
+    if (!active && types.filter(t => t.active).length <= 1) throw new Error('Au moins un type doit rester actif.');
+    const next = types.map(t => t.name === name ? { ...t, active } : t);
+    localStorage.setItem(DEMO_TYPES, JSON.stringify(next));
+    return next;
+  }
   getSettings(): UserSettings {
     // Discard legacy provider credentials and URLs; only a non-secret preference remains.
     localStorage.removeItem('user_settings');

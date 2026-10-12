@@ -32,7 +32,11 @@ await call('liste mauvais jeton', [401, 403], 'api/services/list', { method: 'PO
 await call('création sans jeton', [401, 403], 'api/services/create', { method: 'POST', headers: {}, body: valid });
 // Entrées invalides : 400 attendu avant tout accès aux tables.
 await call('montant négatif', 400, 'api/services/create', { method: 'POST', body: { ...valid, amount: -5 } });
-await call('type inconnu', 400, 'api/services/create', { method: 'POST', body: { ...valid, type: 'Pirate' } });
+await call('type au format invalide', 400, 'api/services/create', { method: 'POST', body: { ...valid, type: '<script>' } });
+// Types de service : lecture authentifiée et validation stricte (aucune écriture pendant la recette).
+await call('types sans jeton', [401, 403], 'api/service-types/all', { headers: {} });
+await call('liste des types', 200, 'api/service-types/all');
+await call('enregistrement de type invalide', 400, 'api/service-types/save', { method: 'POST', body: { name: '<x>', active: true } });
 await call('champ inconnu', 400, 'api/services/create', { method: 'POST', body: { ...valid, role: 'admin' } });
 await call('courriel invalide', 400, 'api/services/list', { method: 'POST', body: { email: 'pas-un-courriel' } });
 await call('identifiant de suppression invalide', 400, 'api/services/delete', { method: 'DELETE', body: { id: '1', driver_email: OWNER } });
