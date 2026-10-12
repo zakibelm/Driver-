@@ -24,3 +24,13 @@ Fichiers : `server/{http,services,plugin}.mjs`, provider n8n et tests, auth getU
 
 Cookie Secure en production ou HTTPS transmis, y compris expiration. CSP, nosniff, Referrer-Policy, frame-ancestors et HSTS production. Ã‰coute 127.0.0.1 par dÃ©faut, HOST surchargeable. Les domaines CDN restent provisoirement autorisÃ©s jusquâ€™au chantier 7. Preuves : chantier-3-test.txt (7 tests verts) et chantier-3-build.txt. Fichiers : server/security.mjs et son test, auth, plugin et vite.config.ts.
 
+
+## Chantier 4 — Vite et fichiers privés
+
+Vite 6.4.4 était déjà installé et est la dernière 6.x retournée par npm ; version désormais exacte et pnpm-lock.yaml ajouté. `npm ls vite` complet a signalé des dépendances de développement imbriquées de la disposition pnpm ; `npm ls vite --depth=0` confirme la dépendance directe valide. La création d’un verrou npm échouait sur workspace:* : hypothèses considérées : layout pnpm, dépendance projet workspace, registre ; le manifeste ne contient aucun workspace, conservation du gestionnaire pnpm existant et création réussie de son verrou.
+
+ADMIN_AUTH_FILE obligatoire, absolu, résolu hors projet ; aucun repli sur le fichier local. Préfiltre HTTP avant Vite et fs.deny renforcé. Suppression de l’injection GEMINI dans le bundle anticipée pour garantir l’absence de secrets frontend. Preuves : chantier-4-version.txt, chantier-4-http.txt (quatre requêtes 403, corps non lus), chantier-4-test.txt (8 tests verts), chantier-4-build.txt. Les tests de chemins rejettent avant accès disque ; aucun contenu du compte n’a été lu.
+
+Fichiers : server/files.mjs et tests, plugin, config Vite, package.json, pnpm-lock.yaml, pnpm-workspace.yaml, README.
+
+Source sécurité : https://github.com/vitejs/vite/security/advisories/GHSA-fx2h-pf6j-xcff ; version corrigée de la série 6.x supérieure à 6.4.2.

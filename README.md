@@ -38,3 +38,7 @@ for data operations. Course data and application settings still use browser stor
 the role shown in the interface does not secure those records or external n8n endpoints.
 
 Run authentication checks with `node --test server/auth.test.mjs`.
+
+## Private account path
+
+Set ADMIN_AUTH_FILE to an absolute path outside this project and outside any directory served by HTTP. Missing, relative or project-internal paths disable real login (503). Move the existing account file manually; it is never migrated or opened by setup scripts. No secret is injected into the frontend build. Vite is pinned to 6.4.4, the latest 6.x returned by the npm registry during this review.
