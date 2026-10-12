@@ -36,9 +36,10 @@ export function email(value) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(result)) throw new Error('Courriel invalide.');
   return result;
 }
-export function serviceInput(value, withOwner = false, allowedTypes = DEFAULT_SERVICE_TYPES) {
+// allowedTypes : liste des types actifs (serveur, qui fait autorité) ; null = format seulement (workflows n8n générés).
+export function serviceInput(value, withOwner = false, allowedTypes = null) {
   object(value, ['type', 'amount', 'date', 'description', ...(withOwner ? ['driver_email'] : [])]);
-  if (!allowedTypes.includes(value.type)) throw new Error('Type invalide ou archivé.');
+  if (allowedTypes ? !allowedTypes.includes(value.type) : (typeof value.type !== 'string' || typeName(value.type) !== value.type)) throw new Error('Type invalide ou archivé.');
   if (typeof value.amount !== 'number' || !Number.isFinite(value.amount) || value.amount <= 0 || value.amount > 10000) throw new Error('Montant entre 0 et 10 000 $ requis.');
   if (typeof value.date !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(value.date) || !Number.isFinite(Date.parse(value.date)) || new Date(value.date).toISOString().replace('.000Z','Z') !== value.date.replace('.000Z','Z')) throw new Error('Date ISO UTC valide requise.');
   return { type: value.type, amount: value.amount, date: value.date, description: text(value.description ?? '', 500, false), ...(withOwner ? { driver_email: email(value.driver_email) } : {}) };

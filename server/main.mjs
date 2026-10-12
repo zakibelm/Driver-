@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createApiMiddlewares } from './plugin.mjs';
 import { externalAccountFile } from './files.mjs';
+import { externalDataFile } from './accounts.mjs';
 
 const TYPES = { '.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.mjs':'text/javascript; charset=utf-8',
  '.css':'text/css; charset=utf-8', '.json':'application/json; charset=utf-8', '.png':'image/png', '.svg':'image/svg+xml',
@@ -57,9 +58,9 @@ async function serveStatic(req, res, distRoot) {
  createReadStream(real).on('error', () => res.destroy()).pipe(res);
 }
 
-export function createHandler(env, { distDir, accountFile }) {
+export function createHandler(env, { distDir, accountFile, accountsFile }) {
  const distRoot = path.resolve(distDir);
- const run = compose(createApiMiddlewares(accountFile, env));
+ const run = compose(createApiMiddlewares(accountFile, env, accountsFile));
  return (req, res) => run(req, res, () => serveStatic(req, res, distRoot).catch(() => { if(!res.headersSent) res.statusCode = 500; res.end(); }));
 }
 
@@ -67,12 +68,17 @@ export function startServer(env = process.env) {
  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
  const settings = { ...env, NODE_ENV: env.NODE_ENV || 'production' };
  const accountFile = externalAccountFile(settings.ADMIN_AUTH_FILE, root);
- if(!accountFile) console.warn('ADMIN_AUTH_FILE absent, relatif ou dans le projet : la connexion réelle renverra 503 (la démo reste disponible).');
- const server = createServer(createHandler(settings, { distDir: path.join(root, 'dist'), accountFile }));
+ const accountsFile = externalDataFile(settings.ACCOUNTS_FILE, root);
+ if(!accountFile && !accountsFile) console.warn('Ni ACCOUNTS_FILE ni ADMIN_AUTH_FILE valides : la connexion réelle renverra 503 (la démo reste disponible).');
+ if(settings.ACCOUNTS_FILE && !accountsFile) console.warn('ACCOUNTS_FILE refusé : chemin absolu requis, dossier existant hors du projet.');
+ const server = createServer(createHandler(settings, { distDir: path.join(root, 'dist'), accountFile, accountsFile }));
  server.requestTimeout = 30000; server.headersTimeout = 15000; server.keepAliveTimeout = 5000; server.maxRequestsPerSocket = 1000;
  const port = Number(settings.PORT || 3012), host = settings.HOST || '127.0.0.1';
  server.listen(port, host, () => console.log(`DrivePilot (${settings.NODE_ENV}) : http://${host}:${port} — HTTPS requis devant ce serveur en production.`));
  return server;
 }
 
-if(process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) startServer();
+// Lancement direct (node server/main.mjs) ou via pm2, qui charge le script depuis son propre conteneur.
+const launchedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+const launchedByPm2 = process.env.pm_exec_path && import.meta.url === pathToFileURL(process.env.pm_exec_path).href;
+if(launchedDirectly || launchedByPm2) startServer();
