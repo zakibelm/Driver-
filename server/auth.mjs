@@ -1,15 +1,16 @@
+import { sessionCookie } from './security.mjs';
 import { readFileSync } from 'node:fs';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 
 const cookieName = 'taxi_session';
 const lifetime = 8 * 60 * 60 * 1000;
 
-export function createAuthMiddleware(accountFile) {
+export function createAuthMiddleware(accountFile, env = process.env) {
   const sessions = new Map();
   const attempts = new Map();
   const sessionId = (req) => (req.headers.cookie || '').split(';').map(v => v.trim())
     .find(v => v.startsWith(`${cookieName}=`))?.slice(cookieName.length + 1);
-  const cookie = (value, age) => `${cookieName}=${value}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${age}`;
+
   const middleware = async (req, res, next) => {
     const path = req.url?.split('?')[0];
     if (!path?.startsWith('/api/auth/')) return next();
@@ -35,7 +36,7 @@ export function createAuthMiddleware(accountFile) {
     }
     if (path === '/api/auth/logout') {
       sessions.delete(sessionId(req));
-      res.setHeader('Set-Cookie', cookie('', 0));
+      res.setHeader('Set-Cookie', sessionCookie(req, '', 0, env));
       return reply(200, { success: true });
     }
     if (path !== '/api/auth/login') return reply(404, { error: 'Introuvable.' });
@@ -70,7 +71,7 @@ export function createAuthMiddleware(accountFile) {
     const id = randomBytes(32).toString('hex');
     const user = { id: account.id, email: account.email, name: account.username, role: 'admin' };
     sessions.set(id, { user, expires: now + lifetime });
-    res.setHeader('Set-Cookie', cookie(id, lifetime / 1000));
+    res.setHeader('Set-Cookie', sessionCookie(req, id, lifetime / 1000, env));
     return reply(200, { user });
   };
   middleware.getUser = req => { const session = sessions.get(sessionId(req)); return session && session.expires > Date.now() ? session.user : null; };

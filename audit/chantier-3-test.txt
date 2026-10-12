@@ -1,0 +1,19 @@
+
+> drivepilot@0.0.0 test
+> node --test server/
+
+✔ admin authentication, session, logout and rejection paths (2438.7873ms)
+✔ secure session cookie in production and on forwarded HTTPS, including logout (1.3225ms)
+✔ security headers prohibit framing, MIME sniffing and referrer disclosure (1.0325ms)
+✔ services deny unauthenticated access, ignore forged ownership and restrict deletion (149.0242ms)
+✔ n8n provider fails closed and scopes requests using server identity (4.5058ms)
+✔ webhook credential references and validation before data access (7.6631ms)
+✔ strict service validation and canonical service types (2.0478ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3099.0014

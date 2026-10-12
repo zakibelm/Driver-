@@ -19,3 +19,8 @@ Problème : identité client et repli silencieux local. Action : `/api/services` G
 Preuves : `chantier-2-test.txt` (5 tests verts), `chantier-2-build.txt`, TypeScript sans erreur. Tests : 401 sans session, autre propriétaire invisible et non supprimable, courriel client rejeté, admin voit toutes les lignes, backend absent = 503. Fournisseur simulé, pas de n8n réel connecté.
 
 Fichiers : `server/{http,services,plugin}.mjs`, provider n8n et tests, auth getUser, `services/storage.ts`, `types.ts`, App, Services, Settings, config Vite.
+
+## Chantier 3 â€” transport et en-tÃªtes
+
+Cookie Secure en production ou HTTPS transmis, y compris expiration. CSP, nosniff, Referrer-Policy, frame-ancestors et HSTS production. Ã‰coute 127.0.0.1 par dÃ©faut, HOST surchargeable. Les domaines CDN restent provisoirement autorisÃ©s jusquâ€™au chantier 7. Preuves : chantier-3-test.txt (7 tests verts) et chantier-3-build.txt. Fichiers : server/security.mjs et son test, auth, plugin et vite.config.ts.
+
