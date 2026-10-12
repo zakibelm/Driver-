@@ -24,6 +24,13 @@ export function createN8nProvider(env = process.env, fetcher = fetch) {
       return data.services.filter(s=>user.role==='admin'||s.driver_email===user.email);
     },
     async create(data) { return (await request('api/services/create','POST',data)).service; },
-    async delete(id, owner) { await request('api/services/delete','DELETE',{id,driver_email:owner}); }
+    async delete(id, owner) { await request('api/services/delete','DELETE',{id,driver_email:owner}); },
+    // Historique des types de service (ajout, archivage, réactivation) ; jamais de suppression.
+    async listTypes() {
+      const data = await request('api/service-types/all');
+      if(!Array.isArray(data.types)) throw new HttpError(502,'Réponse du service invalide.');
+      return data.types;
+    },
+    async saveType(name, active) { await request('api/service-types/save','POST',{name,active}); }
   };
 }
