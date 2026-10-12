@@ -41,7 +41,7 @@ await call('champ inconnu', 400, 'api/services/create', { method: 'POST', body: 
 await call('courriel invalide', 400, 'api/services/list', { method: 'POST', body: { email: 'pas-un-courriel' } });
 await call('identifiant de suppression invalide', 400, 'api/services/delete', { method: 'DELETE', body: { id: '1', driver_email: OWNER } });
 // Cycle nominal.
-const created = await call('création valide', 200, 'api/services/create', { method: 'POST', body: valid });
+const created = await call('création valide', [200, 201], 'api/services/create', { method: 'POST', body: valid });
 createdId = created?.data?.service?.id;
 if(!dry) results.push({ name: 'création : id UUID renvoyé', attendu: 'uuid', obtenu: createdId ? 'présent' : 'absent', ok: /^[0-9a-f-]{36}$/i.test(createdId || '') });
 const listed = await call('liste du propriétaire', 200, 'api/services/list', { method: 'POST', body: { email: OWNER } });

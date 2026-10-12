@@ -28,7 +28,7 @@ for (const [i,[name,method,path,check,kind,operation]] of specs.entries()) {
  link(`Webhook ${name}`,`Validate ${name}`);link(`Validate ${name}`,`Valid ${name}`);link(`Valid ${name}`,`Bad ${name}`,1);
  let prep = `Valid ${name}`;
  if(operation === 'insert') {
-   node(`Prepare ${name}`,'code',{jsCode:`const { randomUUID } = require('crypto'); return [{json:{...$input.first().json.data, ${kind === 'services'?'service_id':'driver_id'}:randomUUID(), created_at:new Date().toISOString(), updated_at:new Date().toISOString()${kind === 'drivers'?", status:'active'":''}}}];`},660,y);
+   node(`Prepare ${name}`,'code',{jsCode:`const randomUUID = () => globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }); return [{json:{...$input.first().json.data, ${kind === 'services'?'service_id':'driver_id'}:randomUUID(), created_at:new Date().toISOString(), updated_at:new Date().toISOString()${kind === 'drivers'?", status:'active'":''}}}];`},660,y);
    link(prep,`Prepare ${name}`);prep=`Prepare ${name}`;
  }
  const params={resource:'row',operation,dataTableId:table(kind)};
@@ -40,7 +40,7 @@ for (const [i,[name,method,path,check,kind,operation]] of specs.entries()) {
    if(operation==='deleteRows') params.options={dryRun:false};
  }
  node(`Store ${name}`,'dataTable',params,880,y,{alwaysOutputData:true});link(prep,`Store ${name}`);
- let body = operation==='deleteRows' ? '({success:true})' : operation==='get' ? '({success:true,services:$input.all().map(x=>x.json).filter(x=>x.service_id).map(x=>({...x,id:x.service_id}))})' : kind==='services' ? '({success:true,service:{...$json,id:$json.service_id}})' : '({success:true,driver:{id:$json.driver_id,email:$json.email}})';
+ let body = operation==='deleteRows' ? '({success:true})' : operation==='get' ? '({success:true,services:$input.all().map(x=>x.json).filter(x=>x.service_id).map(x=>({...x,id:x.service_id}))})' : kind==='services' ? '({ success: true, service: { ...$json, id: $json.service_id } })' : '({ success: true, driver: { id: $json.driver_id, email: $json.email } })';
  node(`Respond ${name}`,'respondToWebhook',{respondWith:'json',responseBody:`={{ ${body} }}`,options:{responseCode:operation==='insert'?201:200}},1100,y);link(`Store ${name}`,`Respond ${name}`);
 }
 writeFileSync('n8n_workflows/05-crud-operations-workflow.json',JSON.stringify({name:'DrivePilot - Authenticated CRUD',nodes,connections,settings:{executionOrder:'v1'},active:false},null,2)+'\n');
