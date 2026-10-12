@@ -52,6 +52,31 @@ test('mail workflow: authenticated, single recipient, no header injection',()=>{
  for(const bad of [{...ok,to:'a@x.test, b@y.test'},{...ok,to:'<a@x.test>'},{...ok,subject:'S\r\nBcc: x@y.test'},{...ok,text:'x'.repeat(5001)},{...ok,cc:'x@y.test'},{to:ok.to,subject:ok.subject}]) assert.equal(run(bad),false);
  assert.equal(run(ok,{x:1}),false);
 });
+test('n8n code nodes never load Node modules (disallowed by the n8n task runner)',()=>{
+ for(const file of ['05-crud-operations-workflow.json','06-service-types-workflow.json','07-send-mail-workflow.json']) {
+  const workflow=JSON.parse(readFileSync('n8n_workflows/'+file));
+  for(const n of workflow.nodes.filter(n=>n.type.endsWith('.code'))) assert.doesNotMatch(n.parameters.jsCode,/\brequire\s*\(/,file+' / '+n.name);
+ }
+});
+test('n8n expressions never close early on an inner "}}"',()=>{
+ for(const file of ['05-crud-operations-workflow.json','06-service-types-workflow.json','07-send-mail-workflow.json']) {
+  const visit=(v,where)=>{
+   if(typeof v==='string' && v.startsWith('=')) {
+    // Chaque {{ … }} doit se refermer exactement là où l'auteur l'a prévu : aucun '}}' à l'intérieur.
+    let rest=v.slice(1);
+    for(let i=rest.indexOf('{{'); i!==-1; i=rest.indexOf('{{')) {
+     const end=rest.indexOf('}}',i+2);
+     assert.notEqual(end,-1,file+' / '+where);
+     const inner=rest.slice(i+2,end);
+     const opens=(inner.match(/[{(\[]/g)||[]).length, closes=(inner.match(/[})\]]/g)||[]).length;
+     assert.equal(opens,closes,file+' / '+where+' : '+v);
+     rest=rest.slice(end+2);
+    }
+   } else if(v && typeof v==='object') for(const [k,x] of Object.entries(v)) visit(x,where+'.'+k);
+  };
+  for(const n of JSON.parse(readFileSync('n8n_workflows/'+file,'utf8')).nodes) visit(n.parameters,n.name);
+ }
+});
 test('strict service validation and canonical service types',()=>{
  const value={type:'Regular',amount:25,date:'2026-10-12T12:00:00.000Z',description:'ok'};
  assert.equal(serviceInput(value).amount,25);
