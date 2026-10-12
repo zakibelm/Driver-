@@ -33,7 +33,7 @@ test('production server: static files, SPA fallback, API wiring, headers and pat
   assert.equal(spa.status, 200); assert.match(await spa.text(), /id="root"/);
   assert.equal((await fetch(base + '/assets/missing.js')).status, 404);
   assert.equal((await fetch(base + '/api/unknown')).status, 404);
-  assert.equal((await fetch(base + '/api/auth/session')).status, 401);
+  { const r = await fetch(base + '/api/auth/session'); assert.equal(r.status, 200); assert.equal((await r.json()).user, null); }
   assert.equal((await fetch(base + '/', { method: 'POST' })).status, 405);
   assert.equal((await fetch(base + '/', { method: 'HEAD' })).status, 200);
   for (const hostile of ['/%2e%2e/secret.txt', '/..%2fsecret.txt', '/%2e%2e%2f%2e%2e%2fsecret.txt', '/assets/..%5c..%5csecret.txt', '/%00', '/admin-auth.local', '/.env', '/.git/config', '/server/auth.mjs']) {

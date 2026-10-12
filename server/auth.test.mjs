@@ -14,7 +14,7 @@ test('real session cookie, rejection, rate limit isolation and logout',async()=>
  const base=`http://127.0.0.1:${server.address().port}`;
  const login=(identifier,password)=>fetch(base+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifier,password})});
  try {
-  assert.equal((await fetch(base+'/api/auth/session')).status,401);
+  { const r=await fetch(base+'/api/auth/session'); assert.equal(r.status,200); assert.equal((await r.json()).user,null); }
   assert.equal((await login('unknown','bad')).status,401);
   assert.equal((await login('unknown','bad')).status,429);
   const response=await login(' ADMIN@EXAMPLE.TEST ',password);
@@ -25,7 +25,7 @@ test('real session cookie, rejection, rate limit isolation and logout',async()=>
   const headers={Cookie:cookie.split(';')[0]};
   assert.equal((await fetch(base+'/api/auth/session',{headers})).status,200);
   assert.equal((await fetch(base+'/api/auth/logout',{method:'POST',headers})).status,200);
-  assert.equal((await fetch(base+'/api/auth/session',{headers})).status,401);
+  { const r=await fetch(base+'/api/auth/session',{headers}); assert.equal(r.status,200); assert.equal((await r.json()).user,null); }
   time+=2000;assert.equal((await login('unknown','bad')).status,401);
   assert.equal((await login('admin','bad')).status,401);
   assert.equal((await login('admin',password)).status,429);

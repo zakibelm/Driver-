@@ -58,7 +58,7 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
 
     const user=getUser(req);
 
-    return reply(res,user?200:401,user?{user}:{error:'Session expirée.'});
+    return reply(res,200,{user:user||null});
 
    }
 
