@@ -259,7 +259,7 @@
       "typeVersion": 1.4,
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ ({success:true,type:{name:$json.name,active:$json.active,changed_at:$json.changed_at}}) }}",
+        "responseBody": "={{ ({ success: true, type: { name: $json.name, active: $json.active, changed_at: $json.changed_at } }) }}",
         "options": {
           "responseCode": 201
         }

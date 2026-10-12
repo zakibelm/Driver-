@@ -93,7 +93,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "parameters": {
-        "jsCode": "const { randomUUID } = require('crypto'); return [{json:{...$input.first().json.data, driver_id:randomUUID(), created_at:new Date().toISOString(), updated_at:new Date().toISOString(), status:'active'}}];"
+        "jsCode": "const randomUUID = () => globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }); return [{json:{...$input.first().json.data, driver_id:randomUUID(), created_at:new Date().toISOString(), updated_at:new Date().toISOString(), status:'active'}}];"
       },
       "position": [
         660,
@@ -131,7 +131,7 @@
       "typeVersion": 1.4,
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ ({success:true,driver:{id:$json.driver_id,email:$json.email}}) }}",
+        "responseBody": "={{ ({ success: true, driver: { id: $json.driver_id, email: $json.email } }) }}",
         "options": {
           "responseCode": 201
         }
@@ -233,7 +233,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "parameters": {
-        "jsCode": "const { randomUUID } = require('crypto'); return [{json:{...$input.first().json.data, service_id:randomUUID(), created_at:new Date().toISOString(), updated_at:new Date().toISOString()}}];"
+        "jsCode": "const randomUUID = () => globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }); return [{json:{...$input.first().json.data, service_id:randomUUID(), created_at:new Date().toISOString(), updated_at:new Date().toISOString()}}];"
       },
       "position": [
         660,
@@ -271,7 +271,7 @@
       "typeVersion": 1.4,
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ ({success:true,service:{...$json,id:$json.service_id}}) }}",
+        "responseBody": "={{ ({ success: true, service: { ...$json, id: $json.service_id } }) }}",
         "options": {
           "responseCode": 201
         }
