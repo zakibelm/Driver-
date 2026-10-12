@@ -1,0 +1,17 @@
+
+> drivepilot@0.0.0 test
+> node --test server/
+
+✔ admin authentication, session, logout and rejection paths (2371.0979ms)
+✔ services deny unauthenticated access, ignore forged ownership and restrict deletion (137.4232ms)
+✔ n8n provider fails closed and scopes requests using server identity (3.1099ms)
+✔ webhook credential references and validation before data access (4.9556ms)
+✔ strict service validation and canonical service types (1.2199ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3111.2472

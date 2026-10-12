@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [services, setServices] = useState<Service[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [dataError, setDataError] = useState('');
   const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
@@ -32,11 +33,13 @@ const App: React.FC = () => {
   }, [session]);
 
   const refreshServices = async () => {
-    const data = await backend.getServices();
-    setServices(data);
+    try { const data = await backend.getServices(); setServices(data); setDataError(''); }
+    catch (error) { setServices([]); setDataError(error instanceof Error ? error.message : 'Chargement impossible.'); }
   };
 
   const handleLogin = (newSession: UserSession) => {
+    setServices([]);
+    setDataError('');
     setSession(newSession);
   };
 
@@ -83,6 +86,8 @@ const App: React.FC = () => {
 
             <main className="flex-1 overflow-y-auto p-4 md:p-8 pt-4 md:pt-8 scrollbar-hide">
                 <div className="max-w-5xl mx-auto pb-24 md:pb-0">
+                    {session.mode === 'demo' && <p role="status" className="mb-4 rounded-xl bg-amber-100 p-3 text-amber-900">Mode démo — données fictives, conservées uniquement dans ce navigateur.</p>}
+                    {dataError && <p role="alert" className="mb-4 rounded-xl bg-red-50 p-3 text-red-700">{dataError}</p>}
                     {currentPage === 'dashboard' && (
                         <Dashboard 
                             services={services} 

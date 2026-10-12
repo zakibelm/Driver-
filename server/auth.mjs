@@ -10,7 +10,7 @@ export function createAuthMiddleware(accountFile) {
   const sessionId = (req) => (req.headers.cookie || '').split(';').map(v => v.trim())
     .find(v => v.startsWith(`${cookieName}=`))?.slice(cookieName.length + 1);
   const cookie = (value, age) => `${cookieName}=${value}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${age}`;
-  return async (req, res, next) => {
+  const middleware = async (req, res, next) => {
     const path = req.url?.split('?')[0];
     if (!path?.startsWith('/api/auth/')) return next();
     res.setHeader('Cache-Control', 'no-store');
@@ -73,6 +73,8 @@ export function createAuthMiddleware(accountFile) {
     res.setHeader('Set-Cookie', cookie(id, lifetime / 1000));
     return reply(200, { user });
   };
+  middleware.getUser = req => { const session = sessions.get(sessionId(req)); return session && session.expires > Date.now() ? session.user : null; };
+  return middleware;
 }
 
 export function localAuthPlugin(accountFile) {

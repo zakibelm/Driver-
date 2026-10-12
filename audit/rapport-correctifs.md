@@ -11,3 +11,11 @@ VÃ©rification : tests locaux de structure et exÃ©cution des validations, pas un 
 Premier Ã©chec de `npm test` : trois hypothÃ¨ses examinÃ©es avant correction : (1) Node 24 rÃ©sout `server/` comme module et non comme glob, (2) mauvais rÃ©pertoire courant, (3) mauvais exÃ©cutable Node/npm. La sortie confirme (1) et le chemin correct exclut (2). Ajout d'un point d'entrÃ©e de tests pour conserver exactement `node --test server/`. Aucun retour arriÃ¨re.
 
 Fichiers : workflow CRUD, crÃ©ation des tables, gÃ©nÃ©rateur, validation et tests dans `server/`, `.gitignore`, `.env.example`, script npm test.
+
+## Chantier 2 — API de courses et isolation
+
+Problème : identité client et repli silencieux local. Action : `/api/services` GET/POST et DELETE `/api/services/:id`, session obligatoire, propriétaire dérivé du serveur, filtrage serveur supplémentaire même si n8n retourne trop de lignes, suppression propriétaire+UUID. n8n est abstrait dans `server/providers/n8n.mjs` ; HTTPS distant, délai 10 s et redirections refusées. Démo séparée, bannière et clés de stockage dédiées. Les réglages fournisseurs du navigateur sont retirés. La séparation de loginDemo (chantier 8) et les UUID de ses nouveaux objets sont avancés car nécessaires à cette isolation.
+
+Preuves : `chantier-2-test.txt` (5 tests verts), `chantier-2-build.txt`, TypeScript sans erreur. Tests : 401 sans session, autre propriétaire invisible et non supprimable, courriel client rejeté, admin voit toutes les lignes, backend absent = 503. Fournisseur simulé, pas de n8n réel connecté.
+
+Fichiers : `server/{http,services,plugin}.mjs`, provider n8n et tests, auth getUser, `services/storage.ts`, `types.ts`, App, Services, Settings, config Vite.

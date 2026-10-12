@@ -42,6 +42,7 @@ export interface AIConversation {
 }
 
 export interface UserSession {
+  mode?: 'demo';
   user: {
     id: string;
     email: string;
@@ -51,10 +52,5 @@ export interface UserSession {
 }
 
 export interface UserSettings {
-  openRouterApiKey: string;
-  model: string;
   enableRAG: boolean;
-  systemPrompt: string;
-  n8nUrl: string;
-  useN8nBackend: boolean;
 }

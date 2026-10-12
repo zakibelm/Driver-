@@ -14,6 +14,7 @@ const SERVICE_TYPES: ServiceType[] = ['Regular', 'TCT', 'Olymel', 'Bombardier', 
 const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onServiceDeleted }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('All');
 
@@ -27,10 +28,10 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
 
   const handleAddService = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
     try {
       await backend.addService({
-        driver_email: 'current',
         type: formData.type,
         amount: parseFloat(formData.amount),
         date: new Date(formData.date).toISOString(),
@@ -40,7 +41,7 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
       setIsModalOpen(false);
       setFormData({ type: 'Regular', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
     } catch (error) {
-      console.error(error);
+      setError(error instanceof Error ? error.message : 'Ajout impossible.');
     } finally {
       setLoading(false);
     }
@@ -48,8 +49,8 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Voulez-vous vraiment supprimer cette course ?')) {
-      await backend.deleteService(id);
-      onServiceDeleted();
+      try { await backend.deleteService(id); onServiceDeleted(); }
+      catch (error) { setError(error instanceof Error ? error.message : 'Suppression impossible.'); }
     }
   };
 
@@ -77,6 +78,7 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
         </button>
       </div>
 
+      {error && !isModalOpen && <p role="alert" className="text-red-700">{error}</p>}
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
         <div className="relative flex-1">
@@ -171,6 +173,7 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                 </div>
                 
                 <form onSubmit={handleAddService} className="p-6 space-y-5">
+                    {error && <p role="alert" className="text-red-300">{error}</p>}
                     {/* Quick Select Chips - Now showing ALL service types */}
                     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                         {SERVICE_TYPES.map(type => (
@@ -210,7 +213,7 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                                 <DollarSign size={18} className="text-slate-500" />
                                 <input 
                                     type="number" 
-                                    step="0.01"
+                                    step="0.01" min="0.01" max="10000"
                                     required
                                     placeholder="0.00"
                                     className="w-full bg-transparent border-none focus:ring-0 p-0 text-white font-medium placeholder-slate-600 outline-none"
@@ -239,7 +242,7 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Notes (Optionnel)</label>
                             <textarea 
                                 className="w-full bg-transparent border-none focus:ring-0 p-0 text-white font-medium placeholder-slate-600 outline-none resize-none"
-                                rows={2}
+                                rows={2} maxLength={500}
                                 placeholder="Détails supplémentaires..."
                                 value={formData.description}
                                 onChange={(e) => setFormData({...formData, description: e.target.value})}
