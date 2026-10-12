@@ -57,6 +57,15 @@ export interface UserSession {
   };
 }
 
+export interface AccountUser {
+  id: string;
+  email: string;
+  username: string;
+  role: 'admin' | 'chauffeur';
+  status: 'unverified' | 'pending' | 'active' | 'disabled';
+  created_at: string;
+}
+
 export interface UserSettings {
   enableRAG: boolean;
 }

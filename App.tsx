@@ -129,6 +129,7 @@ const App: React.FC = () => {
                             onServiceTypesChange={setServiceTypes}
                             canManageTypes={session.user.role === 'admin' || session.mode === 'demo'}
                             isDemo={session.mode === 'demo'}
+                            currentUser={session.user}
                         />
                     )}
                 </div>
