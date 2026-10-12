@@ -9,7 +9,13 @@ export interface Driver {
   created_at: string;
 }
 
-export type ServiceType = 'Regular' | 'TCT' | 'Olymel' | 'Bombardier' | 'Handami' | 'James Miron';
+// Liste gérée par l'admin (Paramètres > Types de service) ; un type archivé reste lisible dans l'historique.
+export type ServiceType = string;
+
+export interface ServiceTypeEntry {
+  name: string;
+  active: boolean;
+}
 
 export interface Service {
   id: string;
@@ -49,6 +55,15 @@ export interface UserSession {
     name: string;
     role: 'admin' | 'chauffeur';
   };
+}
+
+export interface AccountUser {
+  id: string;
+  email: string;
+  username: string;
+  role: 'admin' | 'chauffeur';
+  status: 'unverified' | 'pending' | 'active' | 'disabled';
+  created_at: string;
 }
 
 export interface UserSettings {

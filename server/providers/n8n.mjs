@@ -18,11 +18,19 @@ export function createN8nProvider(env = process.env, fetcher = fetch) {
   }
   return {
     async list(user) {
-      const data = await request(user.role === 'admin' ? 'api/services/all' : `api/services/list/${encodeURIComponent(user.email)}`);
+      // Chemins fixes : n8n préfixe les chemins à paramètres d'un UUID, et le courriel ne doit pas apparaître dans l'URL (journaux).
+      const data = user.role === 'admin' ? await request('api/services/all') : await request('api/services/list','POST',{email:user.email});
       if(!Array.isArray(data.services)) throw new HttpError(502,'Réponse du service invalide.');
       return data.services.filter(s=>user.role==='admin'||s.driver_email===user.email);
     },
     async create(data) { return (await request('api/services/create','POST',data)).service; },
-    async delete(id, owner) { await request(`api/services/delete/${encodeURIComponent(id)}`,'DELETE',{driver_email:owner}); }
+    async delete(id, owner) { await request('api/services/delete','DELETE',{id,driver_email:owner}); },
+    // Historique des types de service (ajout, archivage, réactivation) ; jamais de suppression.
+    async listTypes() {
+      const data = await request('api/service-types/all');
+      if(!Array.isArray(data.types)) throw new HttpError(502,'Réponse du service invalide.');
+      return data.types;
+    },
+    async saveType(name, active) { await request('api/service-types/save','POST',{name,active}); }
   };
 }

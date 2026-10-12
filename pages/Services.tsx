@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Service, ServiceType } from '../types';
+import { Service, ServiceType, ServiceTypeEntry } from '../types';
 import { backend } from '../services/storage';
 import { Plus, Trash2, Search, Filter, X, Calendar, DollarSign, Type } from 'lucide-react';
 import { formatDate } from '../utils/date';
@@ -11,17 +11,24 @@ interface ServicesProps {
   /** Ouvre directement le formulaire (bouton « Ajouter » du tableau de bord). */
   autoOpenForm?: boolean;
   onFormOpened?: () => void;
+  /** Liste gérée par l'admin ; seuls les types actifs sont proposés à la saisie. */
+  serviceTypes: ServiceTypeEntry[];
 }
 
-const SERVICE_TYPES: ServiceType[] = ['Regular', 'TCT', 'Olymel', 'Bombardier', 'Handami', 'James Miron'];
 
-const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onServiceDeleted, autoOpenForm, onFormOpened }) => {
+const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onServiceDeleted, autoOpenForm, onFormOpened, serviceTypes }) => {
+  const activeTypes = serviceTypes.filter(t => t.active).map(t => t.name);
+  const archived = new Set(serviceTypes.filter(t => !t.active).map(t => t.name));
+  // Filtre : tous les types connus + ceux présents dans l'historique (même archivés).
+  const filterTypes = [...new Set([...serviceTypes.map(t => t.name), ...services.map(s => s.type)])];
+  const defaultType = activeTypes[0] ?? '';
   const [isModalOpen, setIsModalOpen] = useState(false);
   const amountRef = useRef<HTMLInputElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
 
   const openModal = () => {
     triggerRef.current = document.activeElement as HTMLElement | null;
+    setFormData(f => activeTypes.includes(f.type) ? f : { ...f, type: defaultType });
     setIsModalOpen(true);
   };
   const closeModal = () => {
@@ -52,7 +59,7 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
 
   // Form State
   const [formData, setFormData] = useState({
-    type: 'Regular' as ServiceType,
+    type: defaultType as ServiceType,
     amount: '',
     date: new Date().toLocaleDateString('en-CA'),
     description: ''
@@ -71,7 +78,7 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
       });
       onServiceAdded();
       closeModal();
-      setFormData({ type: 'Regular', amount: '', date: new Date().toLocaleDateString('en-CA'), description: '' });
+      setFormData({ type: defaultType, amount: '', date: new Date().toLocaleDateString('en-CA'), description: '' });
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Ajout impossible.');
     } finally {
@@ -131,7 +138,7 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                 onChange={(e) => setFilterType(e.target.value)}
             >
                 <option value="All">Tous les types</option>
-                {SERVICE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                {filterTypes.map(t => <option key={t} value={t}>{archived.has(t) ? `${t} (archivé)` : t}</option>)}
             </select>
         </div>
       </div>
@@ -236,7 +243,7 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                     {error && <p role="alert" className="text-red-300">{error}</p>}
                     {/* Quick Select Chips - Now showing ALL service types */}
                     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                        {SERVICE_TYPES.map(type => (
+                        {activeTypes.map(type => (
                             <button
                                 type="button"
                                 key={type}
@@ -262,7 +269,7 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                                     value={formData.type}
                                     onChange={(e) => setFormData({...formData, type: e.target.value as ServiceType})}
                                 >
-                                    {SERVICE_TYPES.map(t => <option key={t} value={t} className="bg-slate-900">{t}</option>)}
+                                    {activeTypes.map(t => <option key={t} value={t} className="bg-slate-900">{t}</option>)}
                                 </select>
                             </div>
                         </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { backend } from './services/storage';
-import { Service, UserSession } from './types';
+import { backend, DEFAULT_SERVICE_TYPES } from './services/storage';
+import { Service, ServiceTypeEntry, UserSession } from './types';
 import { Sidebar, BottomNav } from './components/Sidebar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -12,7 +12,8 @@ import { Menu } from 'lucide-react';
 const App: React.FC = () => {
   const [session, setSession] = useState<UserSession | null>(null);
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const [services, setServices] = useState<Service[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [serviceTypes, setServiceTypes] = useState<ServiceTypeEntry[]>(DEFAULT_SERVICE_TYPES.map(name => ({ name, active: true })));
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dataError, setDataError] = useState('');
   const [checkingSession, setCheckingSession] = useState(true);
@@ -34,10 +35,16 @@ const App: React.FC = () => {
   // Load initial data on mount/login
   useEffect(() => {
     if (session) {
-        refreshServices();
+        refreshServices();
+        refreshServiceTypes();
     }
   }, [session]);
 
+  const refreshServiceTypes = async () => {
+    // En cas d'échec, on garde la dernière liste connue : la saisie reste possible.
+    try { setServiceTypes(await backend.getServiceTypes()); } catch { /* liste précédente conservée */ }
+  };
+
   const refreshServices = async () => {
     try { const data = await backend.getServices(); setServices(data); setDataError(''); }
     catch (error) { setServices([]); setDataError(error instanceof Error ? error.message : 'Chargement impossible.'); }
@@ -110,13 +117,20 @@ const App: React.FC = () => {
                             onServiceDeleted={refreshServices}
                             autoOpenForm={openAddForm}
                             onFormOpened={() => setOpenAddForm(false)}
+                            serviceTypes={serviceTypes}
                         />
                     )}
                     {currentPage === 'chat' && (
                         <Chat services={services} />
                     )}
                     {currentPage === 'settings' && (
-                        <Settings />
+                        <Settings
+                            serviceTypes={serviceTypes}
+                            onServiceTypesChange={setServiceTypes}
+                            canManageTypes={session.user.role === 'admin' || session.mode === 'demo'}
+                            isDemo={session.mode === 'demo'}
+                            currentUser={session.user}
+                        />
                     )}
                 </div>
             </main>

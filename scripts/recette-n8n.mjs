@@ -27,32 +27,36 @@ async function call(name, expected, path, { method = 'GET', headers = { 'X-Drive
  return { status, data };
 }
 // Sans jeton / mauvais jeton : n8n natif répond 403 ; le fragment nginx répond 401 si le jeton est absent.
-await call('liste sans jeton', [401, 403], `api/services/list/${OWNER}`, { headers: {} });
-await call('liste mauvais jeton', [401, 403], `api/services/list/${OWNER}`, { headers: { 'X-DrivePilot-Token': 'invalide' } });
+await call('liste sans jeton', [401, 403], 'api/services/list', { method: 'POST', headers: {}, body: { email: OWNER } });
+await call('liste mauvais jeton', [401, 403], 'api/services/list', { method: 'POST', headers: { 'X-DrivePilot-Token': 'invalide' }, body: { email: OWNER } });
 await call('création sans jeton', [401, 403], 'api/services/create', { method: 'POST', headers: {}, body: valid });
 // Entrées invalides : 400 attendu avant tout accès aux tables.
 await call('montant négatif', 400, 'api/services/create', { method: 'POST', body: { ...valid, amount: -5 } });
-await call('type inconnu', 400, 'api/services/create', { method: 'POST', body: { ...valid, type: 'Pirate' } });
+await call('type au format invalide', 400, 'api/services/create', { method: 'POST', body: { ...valid, type: '<script>' } });
+// Types de service : lecture authentifiée et validation stricte (aucune écriture pendant la recette).
+await call('types sans jeton', [401, 403], 'api/service-types/all', { headers: {} });
+await call('liste des types', 200, 'api/service-types/all');
+await call('enregistrement de type invalide', 400, 'api/service-types/save', { method: 'POST', body: { name: '<x>', active: true } });
 await call('champ inconnu', 400, 'api/services/create', { method: 'POST', body: { ...valid, role: 'admin' } });
-await call('courriel invalide', 400, 'api/services/list/pas-un-courriel');
-await call('identifiant de suppression invalide', 400, 'api/services/delete/1', { method: 'DELETE', body: { driver_email: OWNER } });
+await call('courriel invalide', 400, 'api/services/list', { method: 'POST', body: { email: 'pas-un-courriel' } });
+await call('identifiant de suppression invalide', 400, 'api/services/delete', { method: 'DELETE', body: { id: '1', driver_email: OWNER } });
 // Cycle nominal.
-const created = await call('création valide', 200, 'api/services/create', { method: 'POST', body: valid });
+const created = await call('création valide', [200, 201], 'api/services/create', { method: 'POST', body: valid });
 createdId = created?.data?.service?.id;
 if(!dry) results.push({ name: 'création : id UUID renvoyé', attendu: 'uuid', obtenu: createdId ? 'présent' : 'absent', ok: /^[0-9a-f-]{36}$/i.test(createdId || '') });
-const listed = await call('liste du propriétaire', 200, `api/services/list/${OWNER}`);
+const listed = await call('liste du propriétaire', 200, 'api/services/list', { method: 'POST', body: { email: OWNER } });
 if(!dry) results.push({ name: 'liste : course créée présente', attendu: 'oui', obtenu: listed?.data?.services?.some(s => s.id === createdId) ? 'oui' : 'non', ok: !!listed?.data?.services?.some(s => s.id === createdId) });
-const other = await call('liste d’un autre propriétaire', 200, 'api/services/list/autre@example.test');
+const other = await call('liste d’un autre propriétaire', 200, 'api/services/list', { method: 'POST', body: { email: 'autre@example.test' } });
 if(!dry) results.push({ name: 'isolation : aucune ligne de recette chez un autre', attendu: 'oui', obtenu: (other?.data?.services || []).some(s => s.id === createdId) ? 'fuite' : 'oui', ok: !(other?.data?.services || []).some(s => s.id === createdId) });
 await call('liste complète (serveur)', 200, 'api/services/all');
-await call('suppression avec un mauvais propriétaire', [200, 404], `api/services/delete/${createdId || '00000000-0000-4000-8000-000000000000'}`, { method: 'DELETE', body: { driver_email: 'autre@example.test' } });
+await call('suppression avec un mauvais propriétaire', [200, 404], 'api/services/delete', { method: 'DELETE', body: { id: createdId || '00000000-0000-4000-8000-000000000000', driver_email: 'autre@example.test' } });
 if(!dry) {
- const still = await call('course toujours présente après suppression refusée', 200, `api/services/list/${OWNER}`);
+ const still = await call('course toujours présente après suppression refusée', 200, 'api/services/list', { method: 'POST', body: { email: OWNER } });
  results.push({ name: 'suppression par un autre propriétaire sans effet', attendu: 'oui', obtenu: still?.data?.services?.some(s => s.id === createdId) ? 'oui' : 'non', ok: !!still?.data?.services?.some(s => s.id === createdId) });
 }
-await call('suppression par le propriétaire', 200, `api/services/delete/${createdId || '00000000-0000-4000-8000-000000000000'}`, { method: 'DELETE', body: { driver_email: OWNER } });
+await call('suppression par le propriétaire', 200, 'api/services/delete', { method: 'DELETE', body: { id: createdId || '00000000-0000-4000-8000-000000000000', driver_email: OWNER } });
 if(!dry) {
- const gone = await call('liste après suppression', 200, `api/services/list/${OWNER}`);
+ const gone = await call('liste après suppression', 200, 'api/services/list', { method: 'POST', body: { email: OWNER } });
  results.push({ name: 'course supprimée', attendu: 'oui', obtenu: gone?.data?.services?.some(s => s.id === createdId) ? 'non' : 'oui', ok: !gone?.data?.services?.some(s => s.id === createdId) });
 }
 console.table(results.map(r => ({ test: r.name, attendu: r.attendu, obtenu: r.obtenu, résultat: r.ok ? 'OK' : 'ÉCHEC' })));

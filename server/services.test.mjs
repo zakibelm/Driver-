@@ -33,6 +33,11 @@ test('n8n provider fails closed and scopes requests using server identity',async
  let request;
  const provider=createN8nProvider({N8N_URL:'https://n8n.example.test/webhook',N8N_TOKEN:'test-token'},async(url,options)=>{request={url,options};return {ok:true,json:async()=>({success:true,services:[{driver_email:'other@example.test'}]})};});
  assert.deepEqual(await provider.list({role:'chauffeur',email:'a@example.test'}),[]);
- assert.match(request.url,/list\/a%40example.test$/);
+ assert.match(request.url,/\/api\/services\/list$/);
+ assert.equal(request.options.method,'POST');
+ assert.deepEqual(JSON.parse(request.options.body),{email:'a@example.test'});
+ await provider.delete('11111111-1111-4111-8111-111111111111','a@example.test');
+ assert.match(request.url,/\/api\/services\/delete$/);
+ assert.deepEqual(JSON.parse(request.options.body),{id:'11111111-1111-4111-8111-111111111111',driver_email:'a@example.test'});
  assert.equal(request.options.headers['X-DrivePilot-Token'],'test-token');
 });
