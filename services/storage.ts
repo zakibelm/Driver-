@@ -1,4 +1,4 @@
-import { Service, ServiceTypeEntry, AIConversation, UserSession, UserSettings } from '../types';
+import { Service, ServiceTypeEntry, AccountUser, AIConversation, UserSession, UserSettings } from '../types';
 
 const DEMO_SERVICES = 'drivepilot_demo_services';
 const DEMO_CHAT = 'drivepilot_demo_chat';
@@ -29,6 +29,16 @@ class BackendService {  constructor() { localStorage.removeItem('user_settings'
     this.conversations = [];
     return session;
   }
+  // --- Inscription, confirmation, mot de passe oublié ---
+  async register(email: string, name: string): Promise<string> { return (await this.api('/api/auth/register', 'POST', { email, name })).message; }
+  async verifyEmail(token: string, password: string): Promise<{ status: string; message: string }> { return this.api('/api/auth/verify', 'POST', { token, password }); }
+  async forgotPassword(email: string): Promise<string> { return (await this.api('/api/auth/forgot', 'POST', { email })).message; }
+  async resetPassword(token: string, password: string): Promise<string> { return (await this.api('/api/auth/reset', 'POST', { token, password })).message; }
+  // --- Administration des utilisateurs ---
+  async listUsers(): Promise<AccountUser[]> { return (await this.api('/api/admin/users')).users; }
+  async updateUser(id: string, patch: { status?: 'active' | 'disabled'; role?: 'admin' | 'chauffeur' }): Promise<AccountUser> {
+    return (await this.api('/api/admin/users', 'PUT', { id, ...patch })).user;
+  }
   async getSession(): Promise<UserSession | null> {
     if (sessionStorage.getItem('drivepilot_demo') === '1') return this.loginDemo();
     const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
