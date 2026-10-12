@@ -6,8 +6,8 @@ export function securityHeaders(env = process.env) {
  return (req,res,next) => {
   const dev=env.NODE_ENV !== 'production';
   res.setHeader('Content-Security-Policy',[
-   "default-src 'self'", `script-src 'self' ${dev ? "'unsafe-inline' " : ''}https://cdn.tailwindcss.com https://esm.sh`,
-   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", "font-src 'self' https://fonts.gstatic.com", "img-src 'self' data:",
+   "default-src 'self'", `script-src 'self' ${dev ? "'unsafe-inline' " : ''}`,
+   "style-src 'self' 'unsafe-inline'", "font-src 'self'", "img-src 'self' data:",
    `connect-src 'self'${dev ? ' ws://127.0.0.1:* ws://localhost:*' : ''}`,
    "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'"
   ].join('; '));

@@ -51,3 +51,8 @@ Les descriptions, identifiants et courriels des courses ne sont jamais transmis 
 Modèle : openrouter/free confirmé gratuit par le catalogue public HTTP 200 et https://openrouter.ai/openrouter/free. Preuve chantier-6-modeles.txt. Aucune clé serveur disponible : inférence réelle non testée, à réaliser après configuration ; aucun modèle payant présumé ni clé recherchée ailleurs.
 
 Preuves : chantier-6-test.txt (11 tests verts, exclusion d’une description malveillante, quota et propriétaire), chantier-6-build.txt. Fichiers : server/chat.mjs, providers/openrouter.mjs, leurs tests, plugin, services/storage.ts et Chat.tsx.
+
+## Chantier 7 â€” dÃ©pendances locales
+
+Importmap esm.sh, CDN Tailwind et Google Fonts retirÃ©s. Tailwind 3.4.19 compilÃ© par PostCSS ; Inter 5.3.0 fourni par @fontsource/inter et embarquÃ© dans dist. CSP sans domaine externe, script-src self en production ; lâ€™exception inline en dÃ©veloppement sert uniquement au prÃ©ambule React/Vite, styles inline nÃ©cessaires aux graphiques. Preuves : chantier-7-build.txt (CSS et huit fichiers de police locaux), chantier-7-test.txt (11 tests verts, CSP sans domaine HTTP externe). Fichiers : index.html, index.tsx, styles.css, configs Tailwind/PostCSS, package.json, pnpm-lock.yaml, security et test.
+
