@@ -9,8 +9,8 @@ import { createN8nSecurity } from './n8n-security.mjs';
 import { createAccountStore, createAccountMiddleware } from './accounts.mjs';
 // One ordered middleware list shared by the Vite plugin (dev/preview) and the production server.
 export function createApiMiddlewares(accountFile, env) {
- const shared=env.AUTH_SESSION_STORE==='n8n' ? createN8nSecurity(env) : null;
- const accounts=shared && env.ACCOUNT_STORE==='n8n' ? createAccountStore(shared.request) : null;
+ const shared=env.AUTH_SESSION_STORE?.trim()==='n8n' ? createN8nSecurity(env) : null;
+ const accounts=shared && env.ACCOUNT_STORE?.trim()==='n8n' ? createAccountStore(shared.request) : null;
  const accountRoutes=createAccountMiddleware({accounts,limiter:shared?.limiter,env});
  const auth=createAuthMiddleware(accountFile, env, shared ? {sessionStore:shared.sessions,limiter:shared.limiter,...(accounts?{accounts}:{})} : {});
  const provider=createN8nProvider(env);

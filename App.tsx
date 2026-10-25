@@ -62,10 +62,10 @@ const App: React.FC = () => {
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
         {/* Sidebar (Desktop + Mobile Drawer) */}
-        <Sidebar 
-            currentPage={currentPage} 
-            onNavigate={setCurrentPage} 
-            onLogout={handleLogout} 
+        <Sidebar
+            currentPage={currentPage}
+            onNavigate={setCurrentPage}
+            onLogout={handleLogout}
             user={session.user}
             isOpen={isSidebarOpen}
             toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -73,10 +73,10 @@ const App: React.FC = () => {
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-            
+
             {/* Mobile Header with Hamburger */}
             <div className="md:hidden flex items-center justify-between px-6 py-4 bg-white border-b border-slate-50 shadow-sm z-30">
-                <button 
+                <button
                     aria-label="Ouvrir le menu"
                     onClick={() => setIsSidebarOpen(true)}
                     className="p-2 -ml-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
@@ -92,16 +92,16 @@ const App: React.FC = () => {
                     {session.mode === 'demo' && <p role="status" className="mb-4 rounded-xl bg-amber-100 p-3 text-amber-900">Espace d’essai — données conservées uniquement dans ce navigateur, sans accès aux données réelles.</p>}
                     {dataError && <p role="alert" className="mb-4 rounded-xl bg-red-50 p-3 text-red-700">{dataError}</p>}
                     {currentPage === 'dashboard' && (
-                        <Dashboard 
-                            services={services} 
+                        <Dashboard
+                            services={services}
                             navigateToChat={() => setCurrentPage('chat')}
                             onNavigate={setCurrentPage}
                             user={session.user}
                         />
                     )}
                     {currentPage === 'services' && (
-                        <Services 
-                            services={services} 
+                        <Services
+                            services={services}
                             onServiceAdded={refreshServices}
                             onServiceDeleted={refreshServices}
                         />
@@ -116,7 +116,7 @@ const App: React.FC = () => {
             </main>
 
             {/* Mobile Bottom Navigation */}
-            <BottomNav 
+            <BottomNav
                 currentPage={currentPage}
                 onNavigate={setCurrentPage}
                 onLogout={handleLogout}

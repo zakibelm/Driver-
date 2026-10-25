@@ -14,8 +14,8 @@ for(const name of keys) {
  if(!process.env[name])throw new Error('Variable manquante : '+name);
  const secret=['N8N_TOKEN','ADMIN_AUTH_JSON','OPENROUTER_API_KEY'].includes(name);
  const args=[cli,'env','add',name,'production','--scope','zaks-projects-f05d04ab',...(secret?['--sensitive']:[])];
- let result=spawnSync(process.execPath,args,{input:process.env[name]+'\n',encoding:'utf8',windowsHide:true,timeout:120000});
- if(result.status!==0&&/already exists/i.test(String(result.stderr)+String(result.stdout)))result=spawnSync(process.execPath,[cli,'env','update',name,'production','--scope','zaks-projects-f05d04ab','--yes',...(secret?['--sensitive']:[])],{input:process.env[name]+'\n',encoding:'utf8',windowsHide:true,timeout:120000});
+ let result=spawnSync(process.execPath,args,{input:process.env[name],encoding:'utf8',windowsHide:true,timeout:120000});
+ if(result.status!==0&&/already exists/i.test(String(result.stderr)+String(result.stdout)))result=spawnSync(process.execPath,[cli,'env','update',name,'production','--scope','zaks-projects-f05d04ab','--yes',...(secret?['--sensitive']:[])],{input:process.env[name],encoding:'utf8',windowsHide:true,timeout:120000});
  if(result.status!==0) {
   let message=String(result.stderr||result.error?.message||'');
   for(const key of keys)if(process.env[key])message=message.replaceAll(process.env[key],'[secret]');
