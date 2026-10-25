@@ -28,6 +28,6 @@ Vercel AI Gateway activé après consentement, avec identité OIDC et SDK offici
 - Stockage réel n8n vérifié : confirmation, consommation concurrente du jeton une seule fois, changement de mot de passe et invalidation de session. Fixtures supprimées.
 - Contrôle visuel production : connexion, inscription, mot de passe oublié, espace d’essai vide, déconnexion.
 - Rapports sans secrets : public-production-check.json et accounts-storage-check.json.
-- Aucun courriel réel envoyé pendant les vérifications. La réception dans une boîte de messagerie reste à valider ; autorisation pour un courriel technique en attente.
+- Après autorisation, un seul courriel technique envoyé par le workflow SMTP n8n. Réception confirmée dans Gmail INBOX le 25 octobre 2026. Aucun mot de passe ni état de confirmation du compte modifié. Rapport : production-email-check.json.
 
 Les secrets, captures, workflows, scripts administratifs et tests sont exclus du déploiement par .vercelignore.
