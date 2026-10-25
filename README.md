@@ -1,72 +1,148 @@
 # DrivePilot
 
-Application React 19 / Vite 6 pour suivre les courses, consulter les statistiques et demander une analyse à un assistant. Le logo est fourni par Zaki.
 
-## Démarrage
 
-Node.js 22 ou 24. Les dépendances sont verrouillées dans `pnpm-lock.yaml` :
+Application React 19 / Vite 6 pour suivre les courses, consulter les statistiques et demander une analyse Ã  un assistant. Le logo est fourni par Zaki.
+
+
+
+## DÃ©marrage
+
+
+
+Node.js 22 ou 24. Les dÃ©pendances sont verrouillÃ©es dans `pnpm-lock.yaml` :
+
+
 
 ```sh
+
 pnpm install --frozen-lockfile
+
 npm run dev
+
 ```
 
-Aperçu : http://127.0.0.1:3012. Le port est strict : aucune substitution silencieuse vers un autre port. `HOST` peut changer l’adresse d’écoute ; garder la boucle locale derrière un reverse proxy.
+
+
+AperÃ§u : http://127.0.0.1:3012. Le port est strict : aucune substitution silencieuse vers un autre port. `HOST` peut changer lâ€™adresse dâ€™Ã©coute ; garder la boucle locale derriÃ¨re un reverse proxy.
+
+
 
 ```sh
+
 npm run build
+
 npm test
+
 npx tsc --noEmit
+
 ```
 
-`npm test` exécute `node --test server/` via un point d’entrée compatible Node 24. Les tests utilisent des comptes et fournisseurs synthétiques, jamais le compte réel. Les répertoires dist et .pnpm-store sont régénérables.
+
+
+`npm test` exÃ©cute `node --test server/` via un point dâ€™entrÃ©e compatible Node 24. Les tests utilisent des comptes et fournisseurs synthÃ©tiques, jamais le compte rÃ©el. Les rÃ©pertoires dist et .pnpm-store sont rÃ©gÃ©nÃ©rables.
+
+
 
 ## Configuration serveur
 
-Copier `.env.example` vers `.env.local` et renseigner les variables sur la machine serveur. Aucun secret ne doit avoir le préfixe VITE_. Les fichiers `.env*` sont ignorés sauf le modèle vide. Ne jamais committer un jeton, mot de passe ou fichier de compte.
+
+
+Copier `.env.example` vers `.env.local` et renseigner les variables sur la machine serveur. Aucun secret ne doit avoir le prÃ©fixe VITE_. Les fichiers `.env*` sont ignorÃ©s sauf le modÃ¨le vide. Ne jamais committer un jeton, mot de passe ou fichier de compte.
+
+
 
 | Variable | Usage |
+
 | --- | --- |
-| ADMIN_AUTH_FILE | Chemin absolu du compte JSON, hors du projet et de toute racine HTTP. Obligatoire pour la connexion réelle. |
-| N8N_URL | URL HTTPS de base, terminant généralement par /webhook. HTTP accepté uniquement en boucle locale. |
-| N8N_TOKEN | Secret de la credential Header Auth, envoyé par le serveur dans X-DrivePilot-Token. |
-| OPENROUTER_API_KEY | Clé privée serveur de l’assistant. |
-| OPENROUTER_MODEL | Facultatif ; défaut openrouter/free, gratuit confirmé dans le catalogue au moment de l’audit. |
-| HOST | 127.0.0.1 par défaut. |
-| TRUST_PROXY | 0 par défaut ; 1 seulement derrière un proxy de confiance qui remplace X-Forwarded-For. |
+
+| ADMIN_AUTH_FILE | Chemin absolu du compte JSON, hors du projet et de toute racine HTTP. Obligatoire pour la connexion rÃ©elle. |
+
+| N8N_URL | URL HTTPS de base, terminant gÃ©nÃ©ralement par /webhook. HTTP acceptÃ© uniquement en boucle locale. |
+
+| N8N_TOKEN | Secret de la credential Header Auth, envoyÃ© par le serveur dans X-DrivePilot-Token. |
+
+| OPENROUTER_API_KEY | ClÃ© privÃ©e serveur de lâ€™assistant. |
+
+| OPENROUTER_MODEL | Facultatif ; dÃ©faut openrouter/free, gratuit confirmÃ© dans le catalogue au moment de lâ€™audit. |
+
+| HOST | 127.0.0.1 par dÃ©faut. |
+
+| TRUST_PROXY | 0 par dÃ©faut ; 1 seulement derriÃ¨re un proxy de confiance qui remplace X-Forwarded-For. |
+
 | NODE_ENV | production pour cookies Secure, HSTS et CSP de production. HTTPS obligatoire dans ce mode. |
 
-Déplacer manuellement le compte existant hors de Téléchargements, par exemple dans un répertoire privé du serveur. Le logiciel de configuration n’ouvre ni ne déplace ce fichier. Le chemin interne historique est refusé. Tant que ADMIN_AUTH_FILE n’est pas configuré correctement, la connexion réelle renvoie 503 ; la démo reste utilisable.
 
-Le format existant d’un compte contient id, username, email, salt et passwordHash (scrypt, 64 octets, hexadécimal). Un tableau de comptes est également accepté ; role peut être admin ou chauffeur, défini uniquement dans ce fichier de confiance. Le compte unique historique est admin par défaut. La création d’un profil chauffeur dans n8n ne crée pas automatiquement des identifiants de connexion.
 
-Sessions serveur en mémoire de huit heures, cookie HttpOnly/SameSite=Strict, Secure en production ou HTTPS transmis. Le redémarrage invalide les sessions. Limitation progressive IP+identifiant. Plusieurs instances nécessiteront un stockage partagé de sessions et quotas. Vite dev est réservé au développement ; une mise en production doit conserver l’API Node derrière HTTPS, pas seulement publier dist comme site statique. `NODE_ENV=production npm run preview` permet la recette du bundle et de l’API sur une instance locale derrière HTTPS.
+DÃ©placer manuellement le compte existant hors de TÃ©lÃ©chargements, par exemple dans un rÃ©pertoire privÃ© du serveur. Le logiciel de configuration nâ€™ouvre ni ne dÃ©place ce fichier. Le chemin interne historique est refusÃ©. Tant que ADMIN_AUTH_FILE nâ€™est pas configurÃ© correctement, la connexion rÃ©elle renvoie 503 ; la dÃ©mo reste utilisable.
+
+
+
+Le format existant dâ€™un compte contient id, username, email, salt et passwordHash (scrypt, 64 octets, hexadÃ©cimal). Un tableau de comptes est Ã©galement acceptÃ© ; role peut Ãªtre admin ou chauffeur, dÃ©fini uniquement dans ce fichier de confiance. Le compte unique historique est admin par dÃ©faut. La crÃ©ation dâ€™un profil chauffeur dans n8n ne crÃ©e pas automatiquement des identifiants de connexion.
+
+
+
+Sessions serveur en mÃ©moire de huit heures, cookie HttpOnly/SameSite=Strict, Secure en production ou HTTPS transmis. Le redÃ©marrage invalide les sessions. Limitation progressive Ã  trois niveaux : IP+identifiant (dÃ¨s le premier Ã©chec), IP seule (au-delÃ  de 20 Ã©checs, tous identifiants confondus) et identifiant seul (au-delÃ  de 30 Ã©checs, toutes IP confondues, dÃ©lai plafonnÃ© Ã  60 s). Si les tables de suivi sont pleines, les clÃ©s inconnues sont refusÃ©es 60 s plutÃ´t que dâ€™effacer les plus anciennes. Choisir un mot de passe dâ€™au moins 14 caractÃ¨res : le dÃ©lai maximal autorise environ 1 400 essais par jour et par couple IP+identifiant. Plusieurs instances nÃ©cessiteront un stockage partagÃ© de sessions et quotas. Vite dev et `vite preview` sont rÃ©servÃ©s au dÃ©veloppement et Ã  la recette. **En production, lancer `npm run build` puis `npm start`** : `server/main.mjs` sert `dist/` et lâ€™API avec les mÃªmes protections (en-tÃªtes, fichiers privÃ©s, sessions), sans Vite. Il Ã©coute sur `HOST`:`PORT` (127.0.0.1:3012 par dÃ©faut), passe en `NODE_ENV=production` si la variable est absente et doit toujours Ãªtre placÃ© derriÃ¨re un reverse proxy HTTPS (`TRUST_PROXY=1` seulement si ce proxy remplace `X-Forwarded-For`).
+
+
 
 ## n8n
 
-1. Importer les workflows de création des Data Tables dans `n8n_workflows/`, les exécuter pour créer drivepilot_drivers et drivepilot_services. Pas de migration destructive automatique des anciennes tables.
-2. Renseigner dans n8n les variables non secrètes DRIVEPILOT_DRIVERS_TABLE_ID et DRIVEPILOT_SERVICES_TABLE_ID avec les identifiants créés (ou sélectionner les tables dans les nœuds si votre édition ne permet pas les variables).
-3. Créer la credential **DrivePilot Header Auth**, nom d’en-tête **X-DrivePilot-Token**, valeur identique à N8N_TOKEN. L’associer aux cinq webhooks après import du workflow CRUD. Le JSON ne contient que le nom de credential.
-4. Autoriser uniquement le module Node crypto pour les nœuds Code si la configuration du runner le requiert (`NODE_FUNCTION_ALLOW_BUILTIN=crypto`).
-5. Activer le workflow CRUD, puis définir N8N_URL/N8N_TOKEN sur le serveur DrivePilot.
-6. Tester authentification et validations avant ouverture réseau. Header Auth n8n natif renvoie **403** pour jeton absent ou incorrect. Le fragment `deployment/n8n-header-auth.conf` ajoute **401 pour jeton absent** au reverse proxy ; une credential manquante dans n8n est une erreur de configuration (500), pas une réussite.
 
-Les requêtes du navigateur vont seulement à /api/services. Le serveur impose le propriétaire ; le chauffeur ne voit que ses lignes, l’administrateur voit toutes les lignes. L’endpoint all est destiné exclusivement au serveur détenteur du jeton. La suppression utilise UUID ET propriétaire. Limites : montant numérique > 0 et <= 10 000, date ISO UTC, note <= 500 caractères, champs inconnus refusés. Le workflow se régénère avec `node scripts/generate-workflows.mjs` depuis la validation partagée.
 
-Les workflows n’ont pas été activés ni testés contre une instance réelle par cette mission. Une recette d’import est indispensable pour la version installée de n8n. Les Data Tables et leur identifiant de course service_id sont nouveaux ; les anciennes lignes doivent être migrées explicitement si nécessaire.
+1. Importer les workflows de crÃ©ation des Data Tables dans `n8n_workflows/`, les exÃ©cuter pour crÃ©er drivepilot_drivers et drivepilot_services. Pas de migration destructive automatique des anciennes tables.
+
+2. Renseigner dans n8n les variables non secrÃ¨tes DRIVEPILOT_DRIVERS_TABLE_ID et DRIVEPILOT_SERVICES_TABLE_ID avec les identifiants crÃ©Ã©s (ou sÃ©lectionner les tables dans les nÅ“uds si votre Ã©dition ne permet pas les variables).
+
+3. CrÃ©er la credential **DrivePilot Header Auth**, nom dâ€™en-tÃªte **X-DrivePilot-Token**, valeur identique Ã  N8N_TOKEN. Lâ€™associer aux cinq webhooks aprÃ¨s import du workflow CRUD. Le JSON ne contient que le nom de credential.
+
+4. Autoriser uniquement le module Node crypto pour les nÅ“uds Code si la configuration du runner le requiert (`NODE_FUNCTION_ALLOW_BUILTIN=crypto`).
+
+5. Activer le workflow CRUD, puis dÃ©finir N8N_URL/N8N_TOKEN sur le serveur DrivePilot.
+
+6. Lancer la recette : `npm run recette:n8n` (contrÃ´les : jeton absent ou invalide, entrÃ©es invalides, crÃ©ation, isolation entre propriÃ©taires, suppression). `npm run recette:n8n -- --dry-run` liste les appels sans rien envoyer. Tester authentification et validations avant ouverture rÃ©seau. Header Auth n8n natif renvoie **403** pour jeton absent ou incorrect. Le fragment `deployment/n8n-header-auth.conf` ajoute **401 pour jeton absent** au reverse proxy ; une credential manquante dans n8n est une erreur de configuration (500), pas une rÃ©ussite.
+
+
+
+Les requÃªtes du navigateur vont seulement Ã  /api/services. Le serveur impose le propriÃ©taire ; le chauffeur ne voit que ses lignes, lâ€™administrateur voit toutes les lignes. Lâ€™endpoint all est destinÃ© exclusivement au serveur dÃ©tenteur du jeton. La suppression utilise UUID ET propriÃ©taire. Limites : montant numÃ©rique > 0 et <= 10 000, date ISO UTC, note <= 500 caractÃ¨res, champs inconnus refusÃ©s. Le workflow se rÃ©gÃ©nÃ¨re avec `node scripts/generate-workflows.mjs` depuis la validation partagÃ©e.
+
+
+
+Les workflows nâ€™ont pas Ã©tÃ© activÃ©s ni testÃ©s contre une instance rÃ©elle par cette mission. Une recette dâ€™import est indispensable pour la version installÃ©e de n8n. Les Data Tables et leur identifiant de course service_id sont nouveaux ; les anciennes lignes doivent Ãªtre migrÃ©es explicitement si nÃ©cessaire.
+
+
 
 ## Assistant
 
-/api/chat exige une session, limite les messages à 2 000 caractères et le débit à 10/minute/compte. Clé et choix du modèle restent côté serveur. Les descriptions libres, courriels et identifiants de courses sont exclus du prompt ; seules des statistiques validées, identifiées comme données non fiables, figurent dans le message utilisateur. Aucune donnée de course n’est une instruction système. Les réponses restent du texte échappé, sans HTML, outils ou action automatique.
 
-Le catalogue public confirme openrouter/free ; aucune inférence réelle n’a été testée faute de clé configurée. Après configuration, vérifier une demande courte sans données personnelles. Le routeur choisit parmi les modèles gratuits disponibles, dont disponibilité, quotas et politiques peuvent varier. Les préférences permettent de ne pas joindre les statistiques.
 
-## Démo et données
+/api/chat exige une session, limite les messages Ã  2 000 caractÃ¨res et le dÃ©bit Ã  10/minute/compte. ClÃ© et choix du modÃ¨le restent cÃ´tÃ© serveur. Les descriptions libres, courriels et identifiants de courses sont exclus du prompt ; seules des statistiques validÃ©es, identifiÃ©es comme donnÃ©es non fiables, figurent dans le message utilisateur. Aucune donnÃ©e de course nâ€™est une instruction systÃ¨me. Les rÃ©ponses restent du texte Ã©chappÃ©, sans HTML, outils ou action automatique.
 
-Mode Démo fonctionne sans fournisseur ni clé. Bandeau visible, stockage dédié `drivepilot_demo_services` / `drivepilot_demo_chat`. Entrer en démo ne déconnecte pas la session réelle du serveur. Les données démo ne sont jamais envoyées à n8n ou OpenRouter. La sessionStorage ne sélectionne que la démo ; la modifier ne crée pas de session serveur. Aucun repli local n’est autorisé pour les données réelles.
 
-Les anciens réglages navigateur contenant une clé sont supprimés à l’initialisation des préférences. Les anciennes données locales ne sont ni migrées en données réelles ni effacées automatiquement. Tailwind, React, icônes, graphiques et Inter sont servis localement ; aucun CDN. Les graphiques représentent les courses chargées, sans nombres aléatoires ni revenu prérempli pour un compte réel.
+
+Le catalogue public confirme openrouter/free ; aucune infÃ©rence rÃ©elle nâ€™a Ã©tÃ© testÃ©e faute de clÃ© configurÃ©e. AprÃ¨s configuration, vÃ©rifier une demande courte sans donnÃ©es personnelles. Le routeur choisit parmi les modÃ¨les gratuits disponibles, dont disponibilitÃ©, quotas et politiques peuvent varier. Les prÃ©fÃ©rences permettent de ne pas joindre les statistiques. Le serveur refuse tout message contenant un courriel, un numÃ©ro de tÃ©lÃ©phone ou un numÃ©ro de carte valide (contrÃ´le Luhn), et lâ€™Ã©cran de lâ€™assistant avertit que le texte est traitÃ© par un fournisseur externe. Ce filtre aide Ã  la minimisation des donnÃ©es (Loi 25) sans la garantir : il ne dÃ©tecte ni noms ni adresses postales.
+
+
+
+## DÃ©mo et donnÃ©es
+
+### Types de service
+
+Â« Regular Â» est affichÃ© comme Â« RÃ©gulier Â», y compris pour les anciennes courses. Dans Â« Nouvelle Course Â», choisir Â« Autres Â» affiche un champ obligatoire pour saisir un nom de service (80 caractÃ¨res maximum). Le nom est enregistrÃ© dans le champ `type` de la course et devient disponible dans les sÃ©lecteurs et filtres tant quâ€™une course chargÃ©e lâ€™utilise. Les noms personnalisÃ©s ne sont pas transmis Ã  lâ€™assistant : leurs statistiques sont regroupÃ©es sous Â« Autres Â». Pour un serveur existant, redÃ©marrer lâ€™application et rÃ©importer le workflow CRUD rÃ©gÃ©nÃ©rÃ© afin que n8n accepte ces noms.
+
+
+
+Mode DÃ©mo fonctionne sans fournisseur ni clÃ©. Bandeau visible, stockage dÃ©diÃ© `drivepilot_demo_services` / `drivepilot_demo_chat`. Entrer en dÃ©mo ne dÃ©connecte pas la session rÃ©elle du serveur. Les donnÃ©es dÃ©mo ne sont jamais envoyÃ©es Ã  n8n ou OpenRouter. La sessionStorage ne sÃ©lectionne que la dÃ©mo ; la modifier ne crÃ©e pas de session serveur. Aucun repli local nâ€™est autorisÃ© pour les donnÃ©es rÃ©elles.
+
+
+
+Les anciens rÃ©glages navigateur contenant une clÃ© sont supprimÃ©s Ã  lâ€™initialisation des prÃ©fÃ©rences. Les anciennes donnÃ©es locales ne sont ni migrÃ©es en donnÃ©es rÃ©elles ni effacÃ©es automatiquement. Tailwind, React, icÃ´nes, graphiques et Inter sont servis localement ; aucun CDN. Les graphiques reprÃ©sentent les courses chargÃ©es, sans nombres alÃ©atoires ni revenu prÃ©rempli pour un compte rÃ©el.
+
+
 
 ## Recette et audit
 
-`audit/rapport-correctifs.md` documente les neuf chantiers, preuves et actions manuelles. `audit/rapport.md` et les captures retracent le parcours démo. Le fichier privé de compte est exclu des inspections et de Git.
+
+
+`audit/rapport-correctifs.md` documente les chantiers 1 Ã  9 et la passe de revue R1 Ã  R5, avec preuves et actions manuelles. `audit/rapport.md` et les captures retracent le parcours dÃ©mo. Le fichier privÃ© de compte est exclu des inspections et de Git.
+

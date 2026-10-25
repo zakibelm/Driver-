@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Service, ServiceType } from '../types';
+import { Service, ServiceType, SERVICE_TYPES, serviceTypeLabel } from '../types';
 import { backend } from '../services/storage';
 import { Plus, Trash2, Search, Filter, X, Check, Calendar, DollarSign, Type } from 'lucide-react';
 
@@ -9,7 +9,7 @@ interface ServicesProps {
   onServiceDeleted: () => void;
 }
 
-const SERVICE_TYPES: ServiceType[] = ['Regular', 'TCT', 'Olymel', 'Bombardier', 'Handami', 'James Miron'];
+const OTHER_TYPE = '__other__';
 
 const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onServiceDeleted }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,10 +17,13 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('All');
+  const [customType, setCustomType] = useState('');
+  const availableTypes = [...new Set([...SERVICE_TYPES, ...services.map(s => serviceTypeLabel(s.type))])];
+  const formTypes = [...availableTypes, OTHER_TYPE];
 
   // Form State
   const [formData, setFormData] = useState({
-    type: 'Regular' as ServiceType,
+    type: '' as ServiceType,
     amount: '',
     date: new Date().toLocaleDateString('en-CA'),
     description: ''
@@ -31,15 +34,18 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
     setError('');
     setLoading(true);
     try {
+      const type = formData.type === OTHER_TYPE ? serviceTypeLabel(customType.trim()) : formData.type;
+      if (!type || type.length > 80 || /^autres?$/i.test(type) || type === OTHER_TYPE || /[\u0000-\u001f\u007f]/.test(type)) throw new Error('Saisissez le nom du service (80 caractères maximum).');
       await backend.addService({
-        type: formData.type,
+        type,
         amount: parseFloat(formData.amount),
         date: new Date(formData.date + 'T12:00:00').toISOString(),
         description: formData.description
       });
       onServiceAdded();
       setIsModalOpen(false);
-      setFormData({ type: 'Regular', amount: '', date: new Date().toLocaleDateString('en-CA'), description: '' });
+      setFormData({ type: '', amount: '', date: new Date().toLocaleDateString('en-CA'), description: '' });
+      setCustomType('');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Ajout impossible.');
     } finally {
@@ -56,9 +62,9 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
 
   const filteredServices = services.filter(s => {
     const matchesSearch = s.description?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          s.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          serviceTypeLabel(s.type).toLowerCase().includes(searchTerm.toLowerCase()) ||
                           s.amount.toString().includes(searchTerm);
-    const matchesFilter = filterType === 'All' || s.type === filterType;
+    const matchesFilter = filterType === 'All' || serviceTypeLabel(s.type) === filterType;
     return matchesSearch && matchesFilter;
   });
 
@@ -99,7 +105,7 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                 onChange={(e) => setFilterType(e.target.value)}
             >
                 <option value="All">Tous les types</option>
-                {SERVICE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                {availableTypes.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
         </div>
       </div>
@@ -126,11 +132,11 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                                 </td>
                                 <td className="px-6 py-5">
                                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold 
-                                        ${service.type === 'Regular' ? 'bg-slate-100 text-slate-600' : 
+                                        ${serviceTypeLabel(service.type) === 'Régulier' ? 'bg-slate-100 text-slate-600' : 
                                           service.type === 'Olymel' ? 'bg-red-50 text-red-600' :
                                           service.type === 'TCT' ? 'bg-blue-50 text-blue-600' :
                                           'bg-yellow-50 text-yellow-700'}`}>
-                                        {service.type}
+                                        {serviceTypeLabel(service.type)}
                                     </span>
                                 </td>
                                 <td className="px-6 py-5 font-bold text-slate-900">
@@ -175,8 +181,8 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                 <form onSubmit={handleAddService} className="p-6 space-y-5">
                     {error && <p role="alert" className="text-red-300">{error}</p>}
                     {/* Quick Select Chips - Now showing ALL service types */}
-                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                        {SERVICE_TYPES.map(type => (
+                    <div className="flex flex-wrap gap-2 pb-2">
+                        {formTypes.map(type => (
                             <button
                                 type="button"
                                 key={type}
@@ -187,7 +193,7 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                                     : 'bg-transparent border-white/20 text-slate-400 hover:border-white/40'
                                 }`}
                             >
-                                {type}
+                                {type === OTHER_TYPE ? 'Autres' : type}
                             </button>
                         ))}
                     </div>
@@ -197,15 +203,24 @@ const Services: React.FC<ServicesProps> = ({ services, onServiceAdded, onService
                             <label htmlFor="service-type" className="block text-xs font-bold text-slate-400 uppercase mb-1">Type de Service</label>
                             <div className="flex items-center gap-3 text-white">
                                 <Type size={18} className="text-slate-500" />
-                                <select id="service-type"
+                                <select id="service-type" required
                                     className="w-full bg-transparent border-none focus:ring-0 p-0 text-white font-medium outline-none"
                                     value={formData.type}
                                     onChange={(e) => setFormData({...formData, type: e.target.value as ServiceType})}
                                 >
-                                    {SERVICE_TYPES.map(t => <option key={t} value={t} className="bg-slate-900">{t}</option>)}
+                                    <option value="" disabled className="bg-slate-900">Type de service</option>
+                                    {formTypes.map(t => <option key={t} value={t} className="bg-slate-900">{t === OTHER_TYPE ? 'Autres' : t}</option>)}
                                 </select>
                             </div>
                         </div>
+
+                        {formData.type === OTHER_TYPE && (
+                          <div className="bg-white/5 p-4 rounded-2xl border border-red-500/50">
+                            <label htmlFor="custom-service-type" className="block text-xs font-bold text-slate-400 uppercase mb-1">Nom du nouveau service</label>
+                            <input id="custom-service-type" autoFocus required maxLength={80} value={customType} onChange={e => setCustomType(e.target.value)} placeholder="Ex. : Transport aéroport" className="w-full bg-transparent text-white font-medium placeholder-slate-500 outline-none" />
+                            <p className="mt-2 text-xs text-slate-400">Ce service sera disponible dans la liste après l’ajout de la course.</p>
+                          </div>
+                        )}
 
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/5 focus-within:border-red-500/50 transition-colors">
                             <label htmlFor="service-amount" className="block text-xs font-bold text-slate-400 uppercase mb-1">Montant Total</label>

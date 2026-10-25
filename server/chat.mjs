@@ -1,5 +1,6 @@
 import { HttpError, jsonBody, reply, sameOrigin, validate } from './http.mjs';
 import { object, text } from './validation.mjs';
+import { hasPersonalData, PERSONAL_DATA_MESSAGE } from './privacy.mjs';
 export function createChatMiddleware({getUser,provider,services,now=Date.now}) {
  const quotas=new Map();
  return async(req,res,next)=>{
@@ -17,6 +18,7 @@ export function createChatMiddleware({getUser,provider,services,now=Date.now}) {
     if(typeof body.includeServices!=='boolean') throw new Error('boolean');
     return {message:text(body.message,2000),includeServices:body.includeServices};
    });
+   if(hasPersonalData(input.message)) throw new HttpError(400,PERSONAL_DATA_MESSAGE);
    for(const [key,value] of quotas) if(value.reset<=now()) quotas.delete(key);
    const quota=quotas.get(user.id) || {count:0,reset:now()+60000};
    if(quota.count>=10) {res.setHeader('Retry-After',String(Math.ceil((quota.reset-now())/1000)));throw new HttpError(429,'Limite de 10 demandes par minute atteinte.');}

@@ -20,5 +20,7 @@ test('webhook credential references and validation before data access', () => {
 test('strict service validation and canonical service types',()=>{
  const value={type:'Regular',amount:25,date:'2026-10-12T12:00:00.000Z',description:'ok'};
  assert.equal(serviceInput(value).amount,25);
- for(const patch of [{amount:0},{amount:10001},{amount:'25'},{amount:Infinity},{date:'2026-02-30T00:00:00Z'},{type:'unknown'},{description:'x'.repeat(501)},{driver_email:'other@example.test'}]) assert.throws(()=>serviceInput({...value,...patch}));
+ assert.equal(serviceInput(value).type, 'Régulier');
+ assert.equal(serviceInput({...value,type:' Transport aéroport '}).type,'Transport aéroport');
+ for(const patch of [{amount:0},{amount:10001},{amount:'25'},{amount:Infinity},{date:'2026-02-30T00:00:00Z'},{type:''},{type:' '.repeat(4)},{type:'x'.repeat(81)},{type:'Autres'},{type:'__other__'},{type:'Taxi\nTest'},{description:'x'.repeat(501)},{driver_email:'other@example.test'}]) assert.throws(()=>serviceInput({...value,...patch}));
 });

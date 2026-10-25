@@ -9,7 +9,10 @@ export interface Driver {
   created_at: string;
 }
 
-export type ServiceType = 'Regular' | 'TCT' | 'Olymel' | 'Bombardier' | 'Handami' | 'James Miron';
+export type ServiceType = string;
+
+export const SERVICE_TYPES = ['Régulier', 'TCT', 'Olymel', 'Bombardier', 'Handami', 'James Miron'];
+export const serviceTypeLabel = (type: string) => type === 'Regular' ? 'Régulier' : type;
 
 export interface Service {
   id: string;
