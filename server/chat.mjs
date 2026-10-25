@@ -7,7 +7,7 @@ export function createChatMiddleware({getUser,provider,services,now=Date.now}) {
   const url=new URL(req.url,'http://local');
   if(url.pathname!=='/api/chat') return next();
   try {
-   const user=getUser(req);
+   const user=await getUser(req);
    if(!user || !['admin','chauffeur'].includes(user.role)) throw new HttpError(401,'Connexion requise.');
    if(req.method!=='POST') throw new HttpError(405,'Méthode non autorisée.');
    if(url.search) throw new HttpError(400,'Paramètres non autorisés.');

@@ -1,4 +1,5 @@
 import { HttpError } from '../http.mjs';
+import { randomUUID } from 'node:crypto';
 export function createN8nProvider(env = process.env, fetcher = fetch) {
   async function request(path, method = 'GET', body) {
     if(!env.N8N_URL || !env.N8N_TOKEN) throw new HttpError(503,'Le service de courses est non configuré. Le mode démo reste disponible.');
@@ -18,11 +19,11 @@ export function createN8nProvider(env = process.env, fetcher = fetch) {
   }
   return {
     async list(user) {
-      const data = await request(user.role === 'admin' ? 'api/services/all' : `api/services/list/${encodeURIComponent(user.email)}`);
+      const data = await request(user.role === 'admin' ? 'api/services/all' : `api/services/list?email=${encodeURIComponent(user.email)}`);
       if(!Array.isArray(data.services)) throw new HttpError(502,'Réponse du service invalide.');
       return data.services.filter(s=>user.role==='admin'||s.driver_email===user.email);
     },
-    async create(data) { return (await request('api/services/create','POST',data)).service; },
-    async delete(id, owner) { await request(`api/services/delete/${encodeURIComponent(id)}`,'DELETE',{driver_email:owner}); }
+    async create(data) { return (await request('api/services/create','POST',{...data,service_id:randomUUID()})).service; },
+    async delete(id, owner) { await request('api/services/delete','DELETE',{id,driver_email:owner}); }
   };
 }

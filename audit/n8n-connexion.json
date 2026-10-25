@@ -1,0 +1,50 @@
+{
+  "instance": "https://n8n.xtream.space",
+  "webhookBase": "https://n8n.xtream.space/webhook/drivepilot-app",
+  "servicesTableId": "k7qrYzRHXLi0Yf9K",
+  "driversTableId": "nIUs2pnr1KHF40on",
+  "credentialId": "5qfz2V5523XWA4Dy",
+  "workflowId": "QOK1JPfNkWDUob5A",
+  "workflowName": "DrivePilot - Courses (connexion application)",
+  "active": true,
+  "verifiedAt": "2026-10-25T18:12:52.294Z",
+  "lastTest": {
+    "at": "2026-10-25T18:12:54.660Z",
+    "checks": [
+      {
+        "test": "cleanup-previous-test-only",
+        "ok": true
+      },
+      {
+        "test": "missing-token",
+        "status": 403,
+        "ok": true
+      },
+      {
+        "test": "invalid-token",
+        "status": 403,
+        "ok": true
+      },
+      {
+        "test": "create-custom-service",
+        "ok": true
+      },
+      {
+        "test": "read-created-course",
+        "ok": true
+      },
+      {
+        "test": "owner-isolation",
+        "ok": true
+      },
+      {
+        "test": "delete-created-test-only",
+        "ok": true
+      }
+    ],
+    "cleanupConfirmed": true
+  },
+  "sessionsTableId": "q7SLYZ1QPiBIaw4j",
+  "loginAttemptsTableId": "ziRHpTubgB9UXzDy",
+  "authWorkflowId": "vFvG09lztlkn5F4e"
+}

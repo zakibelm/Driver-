@@ -1,0 +1,1210 @@
+{
+  "name": "DrivePilot - Authentification production",
+  "nodes": [
+    {
+      "name": "Webhook Session Create",
+      "id": "webhook-session-create",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drivepilot-app/api/auth/session/create",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "a9ef38c9-b5fc-48ce-800c-e3951dd0b29c",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "5qfz2V5523XWA4Dy",
+          "name": "DrivePilot application - webhook dédié"
+        }
+      }
+    },
+    {
+      "name": "Validate Session Create",
+      "id": "validate-session-create",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function hash(v){if(typeof v!==\"string\"||!/^[a-f0-9]{64}$/.test(v))throw Error(\"hash\");return v;}const input=$input.first().json;try{obj(input.body,[\"hash\",\"user\",\"expires\"]);const b=input.body;obj(b.user,[\"id\",\"email\",\"name\",\"role\"]);if(![\"admin\",\"chauffeur\"].includes(b.user.role)||![\"string\",\"number\"].includes(typeof b.user.id)||typeof b.user.email!==\"string\"||typeof b.user.name!==\"string\"||!b.user.name||b.user.name.length>100||!Number.isFinite(b.expires)||b.expires<=Date.now()||b.expires>Date.now()+28900000)throw Error(\"session\");const data={session_hash:hash(b.hash),user_json:JSON.stringify(b.user),expires_at:b.expires};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
+      },
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "name": "Valid Session Create",
+      "id": "valid-session-create",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "name": "Bad Session Create",
+      "id": "bad-session-create",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"Entrée invalide.\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        120
+      ]
+    },
+    {
+      "name": "Prepare Session Create",
+      "id": "prepare-session-create",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "return [{json:$input.first().json.data}];"
+      },
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "name": "Store Session Create",
+      "id": "store-session-create",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "q7SLYZ1QPiBIaw4j"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        }
+      },
+      "position": [
+        880,
+        0
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Format Session Create",
+      "id": "format-session-create",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "return [{json:{success:true}}];"
+      },
+      "position": [
+        1100,
+        0
+      ]
+    },
+    {
+      "name": "Respond Session Create",
+      "id": "respond-session-create",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1320,
+        0
+      ]
+    },
+    {
+      "name": "Webhook Session Get",
+      "id": "webhook-session-get",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "drivepilot-app/api/auth/session/get",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "80cf9fc9-f02b-4347-b48b-3d90e2ebba94",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "5qfz2V5523XWA4Dy",
+          "name": "DrivePilot application - webhook dédié"
+        }
+      }
+    },
+    {
+      "name": "Validate Session Get",
+      "id": "validate-session-get",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function hash(v){if(typeof v!==\"string\"||!/^[a-f0-9]{64}$/.test(v))throw Error(\"hash\");return v;}const input=$input.first().json;try{obj(input.query,[\"hash\"]);const data={hash:hash(input.query.hash)};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
+      },
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "name": "Valid Session Get",
+      "id": "valid-session-get",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "name": "Bad Session Get",
+      "id": "bad-session-get",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"Entrée invalide.\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        420
+      ]
+    },
+    {
+      "name": "Store Session Get",
+      "id": "store-session-get",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "q7SLYZ1QPiBIaw4j"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_hash",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.hash }}"
+            }
+          ]
+        },
+        "returnAll": false,
+        "limit": 1000
+      },
+      "position": [
+        880,
+        300
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Format Session Get",
+      "id": "format-session-get",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const row=$input.all().map(x=>x.json).find(x=>x.session_hash&&x.expires_at>Date.now());return [{json:{success:true,session:row?{user:JSON.parse(row.user_json),expires:row.expires_at}:null}}];"
+      },
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "name": "Respond Session Get",
+      "id": "respond-session-get",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1320,
+        300
+      ]
+    },
+    {
+      "name": "Webhook Session Delete",
+      "id": "webhook-session-delete",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "DELETE",
+        "path": "drivepilot-app/api/auth/session/delete",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        600
+      ],
+      "webhookId": "8b38ae8d-d26b-444c-bd94-e818e958cb2a",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "5qfz2V5523XWA4Dy",
+          "name": "DrivePilot application - webhook dédié"
+        }
+      }
+    },
+    {
+      "name": "Validate Session Delete",
+      "id": "validate-session-delete",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function hash(v){if(typeof v!==\"string\"||!/^[a-f0-9]{64}$/.test(v))throw Error(\"hash\");return v;}const input=$input.first().json;try{obj(input.body,[\"hash\"]);const data={hash:hash(input.body.hash)};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
+      },
+      "position": [
+        220,
+        600
+      ]
+    },
+    {
+      "name": "Valid Session Delete",
+      "id": "valid-session-delete",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        600
+      ]
+    },
+    {
+      "name": "Bad Session Delete",
+      "id": "bad-session-delete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"Entrée invalide.\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        720
+      ]
+    },
+    {
+      "name": "Store Session Delete",
+      "id": "store-session-delete",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "q7SLYZ1QPiBIaw4j"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_hash",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.hash }}"
+            }
+          ]
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "position": [
+        880,
+        600
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Format Session Delete",
+      "id": "format-session-delete",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "return [{json:{success:true}}];"
+      },
+      "position": [
+        1100,
+        600
+      ]
+    },
+    {
+      "name": "Respond Session Delete",
+      "id": "respond-session-delete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1320,
+        600
+      ]
+    },
+    {
+      "name": "Webhook Rate Check",
+      "id": "webhook-rate-check",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "drivepilot-app/api/auth/rate/check",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        900
+      ],
+      "webhookId": "67ccab68-8eb8-43da-b56e-29dbfe6a86a0",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "5qfz2V5523XWA4Dy",
+          "name": "DrivePilot application - webhook dédié"
+        }
+      }
+    },
+    {
+      "name": "Validate Rate Check",
+      "id": "validate-rate-check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function hash(v){if(typeof v!==\"string\"||!/^[a-f0-9]{64}$/.test(v))throw Error(\"hash\");return v;}const input=$input.first().json;try{obj(input.query,[\"ip\",\"account\"]);const data={ip:hash(input.query.ip),account:hash(input.query.account)};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
+      },
+      "position": [
+        220,
+        900
+      ]
+    },
+    {
+      "name": "Valid Rate Check",
+      "id": "valid-rate-check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        900
+      ]
+    },
+    {
+      "name": "Bad Rate Check",
+      "id": "bad-rate-check",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"Entrée invalide.\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        1020
+      ]
+    },
+    {
+      "name": "Store Rate Check",
+      "id": "store-rate-check",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "ziRHpTubgB9UXzDy"
+        },
+        "matchType": "anyCondition",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "ip_hash",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.ip }}"
+            },
+            {
+              "keyName": "account_hash",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.account }}"
+            }
+          ]
+        },
+        "returnAll": false,
+        "limit": 1000
+      },
+      "position": [
+        880,
+        900
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Format Rate Check",
+      "id": "format-rate-check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const identity=$(\"Validate Rate Check\").first().json.data;const now=Date.now();const raw=$input.all().map(x=>x.json);if(raw.length>=1000)return [{json:{success:true,retryAfter:60}}];const rows=raw.filter(x=>Number.isFinite(x.created_ms)&&x.created_ms>now-900000);const success=rows.filter(x=>x.successful);const lastAccount=Math.max(0,...success.filter(x=>x.account_hash===identity.account).map(x=>x.created_ms));const lastPair=Math.max(0,...success.filter(x=>x.account_hash===identity.account&&x.ip_hash===identity.ip).map(x=>x.created_ms));const failures=rows.filter(x=>!x.successful);const pair=failures.filter(x=>x.account_hash===identity.account&&x.ip_hash===identity.ip&&x.created_ms>lastPair);const ip=failures.filter(x=>x.ip_hash===identity.ip);const account=failures.filter(x=>x.account_hash===identity.account&&x.created_ms>lastAccount);function next(items,free){return items.length<=free?0:Math.max(...items.map(x=>x.created_ms))+Math.min(60000,1000*2**Math.min(items.length-free-1,6));}const retryAfter=Math.max(0,Math.min(60,Math.ceil((Math.max(next(pair,0),next(ip,20),next(account,30))-now)/1000)));return [{json:{success:true,retryAfter}}];"
+      },
+      "position": [
+        1100,
+        900
+      ]
+    },
+    {
+      "name": "Respond Rate Check",
+      "id": "respond-rate-check",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1320,
+        900
+      ]
+    },
+    {
+      "name": "Webhook Rate Record",
+      "id": "webhook-rate-record",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drivepilot-app/api/auth/rate/record",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        1200
+      ],
+      "webhookId": "ce601f0c-cc18-45c9-ba80-7df72a46d392",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "5qfz2V5523XWA4Dy",
+          "name": "DrivePilot application - webhook dédié"
+        }
+      }
+    },
+    {
+      "name": "Validate Rate Record",
+      "id": "validate-rate-record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function hash(v){if(typeof v!==\"string\"||!/^[a-f0-9]{64}$/.test(v))throw Error(\"hash\");return v;}const input=$input.first().json;try{obj(input.body,[\"ip\",\"account\",\"successful\"]);if(typeof input.body.successful!==\"boolean\")throw Error(\"record\");const data={ip_hash:hash(input.body.ip),account_hash:hash(input.body.account),successful:input.body.successful,created_ms:Date.now()};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
+      },
+      "position": [
+        220,
+        1200
+      ]
+    },
+    {
+      "name": "Valid Rate Record",
+      "id": "valid-rate-record",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        1200
+      ]
+    },
+    {
+      "name": "Bad Rate Record",
+      "id": "bad-rate-record",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"Entrée invalide.\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        1320
+      ]
+    },
+    {
+      "name": "Prepare Rate Record",
+      "id": "prepare-rate-record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "return [{json:$input.first().json.data}];"
+      },
+      "position": [
+        660,
+        1200
+      ]
+    },
+    {
+      "name": "Store Rate Record",
+      "id": "store-rate-record",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "ziRHpTubgB9UXzDy"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        }
+      },
+      "position": [
+        880,
+        1200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Format Rate Record",
+      "id": "format-rate-record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "return [{json:{success:true}}];"
+      },
+      "position": [
+        1100,
+        1200
+      ]
+    },
+    {
+      "name": "Respond Rate Record",
+      "id": "respond-rate-record",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1320,
+        1200
+      ]
+    },
+    {
+      "id": "cleanup-hourly",
+      "name": "Cleanup hourly",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        1700
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Expired sessions",
+      "id": "expired-sessions",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "q7SLYZ1QPiBIaw4j"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "expires_at",
+              "condition": "lt",
+              "keyValue": "={{ Date.now() - 0 }}"
+            }
+          ]
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "position": [
+        440,
+        1700
+      ]
+    },
+    {
+      "name": "Old login attempts",
+      "id": "old-login-attempts",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "ziRHpTubgB9UXzDy"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "created_ms",
+              "condition": "lt",
+              "keyValue": "={{ Date.now() - 900000 }}"
+            }
+          ]
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "position": [
+        440,
+        1900
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Session Create": {
+      "main": [
+        [
+          {
+            "node": "Validate Session Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Session Create": {
+      "main": [
+        [
+          {
+            "node": "Valid Session Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Session Create": {
+      "main": [
+        [
+          {
+            "node": "Prepare Session Create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Session Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Session Create": {
+      "main": [
+        [
+          {
+            "node": "Store Session Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Session Create": {
+      "main": [
+        [
+          {
+            "node": "Format Session Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Session Create": {
+      "main": [
+        [
+          {
+            "node": "Respond Session Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Session Get": {
+      "main": [
+        [
+          {
+            "node": "Validate Session Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Session Get": {
+      "main": [
+        [
+          {
+            "node": "Valid Session Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Session Get": {
+      "main": [
+        [
+          {
+            "node": "Store Session Get",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Session Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Session Get": {
+      "main": [
+        [
+          {
+            "node": "Format Session Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Session Get": {
+      "main": [
+        [
+          {
+            "node": "Respond Session Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Session Delete": {
+      "main": [
+        [
+          {
+            "node": "Validate Session Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Session Delete": {
+      "main": [
+        [
+          {
+            "node": "Valid Session Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Session Delete": {
+      "main": [
+        [
+          {
+            "node": "Store Session Delete",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Session Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Session Delete": {
+      "main": [
+        [
+          {
+            "node": "Format Session Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Session Delete": {
+      "main": [
+        [
+          {
+            "node": "Respond Session Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Rate Check": {
+      "main": [
+        [
+          {
+            "node": "Validate Rate Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Rate Check": {
+      "main": [
+        [
+          {
+            "node": "Valid Rate Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Rate Check": {
+      "main": [
+        [
+          {
+            "node": "Store Rate Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Rate Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Rate Check": {
+      "main": [
+        [
+          {
+            "node": "Format Rate Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Rate Check": {
+      "main": [
+        [
+          {
+            "node": "Respond Rate Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Rate Record": {
+      "main": [
+        [
+          {
+            "node": "Validate Rate Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Rate Record": {
+      "main": [
+        [
+          {
+            "node": "Valid Rate Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Rate Record": {
+      "main": [
+        [
+          {
+            "node": "Prepare Rate Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Rate Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Rate Record": {
+      "main": [
+        [
+          {
+            "node": "Store Rate Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Rate Record": {
+      "main": [
+        [
+          {
+            "node": "Format Rate Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Rate Record": {
+      "main": [
+        [
+          {
+            "node": "Respond Rate Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup hourly": {
+      "main": [
+        [
+          {
+            "node": "Expired sessions",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Old login attempts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Toronto"
+  },
+  "active": false
+}

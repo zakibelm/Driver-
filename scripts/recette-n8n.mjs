@@ -1,9 +1,10 @@
 // Recette des webhooks DrivePilot contre une instance n8n réelle.
 // Usage : N8N_URL=https://n8n.exemple.ca/webhook N8N_TOKEN=... node scripts/recette-n8n.mjs [--dry-run]
 // Crée puis supprime une seule course de test (recette@example.test). Aucun secret n'est affiché.
+import { randomUUID } from 'node:crypto';
 const dry = process.argv.includes('--dry-run');
 const url = process.env.N8N_URL, token = process.env.N8N_TOKEN;
-const OWNER = 'recette@example.test';
+const OWNER = `recette-${randomUUID()}@example.test`;
 function fail(message) { console.error(message); process.exit(2); }
 if(!dry) {
  if(!url || !token) fail('N8N_URL et N8N_TOKEN sont requis (voir README).');
@@ -11,7 +12,7 @@ if(!dry) {
  if(base.protocol !== 'https:' && !['localhost', '127.0.0.1', '[::1]'].includes(base.hostname)) fail('HTTPS requis hors boucle locale.');
 }
 const root = (url || 'https://n8n.example/webhook').replace(/\/$/, '');
-const valid = { type: 'Regular', amount: 12.5, date: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'), description: 'recette automatique', driver_email: OWNER };
+const valid = { type: 'Régulier', service_id: randomUUID(), amount: 12.5, date: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'), description: 'recette automatique', driver_email: OWNER };
 const results = [];
 let createdId;
 async function call(name, expected, path, { method = 'GET', headers = { 'X-DrivePilot-Token': token }, body } = {}) {
@@ -27,32 +28,31 @@ async function call(name, expected, path, { method = 'GET', headers = { 'X-Drive
  return { status, data };
 }
 // Sans jeton / mauvais jeton : n8n natif répond 403 ; le fragment nginx répond 401 si le jeton est absent.
-await call('liste sans jeton', [401, 403], `api/services/list/${OWNER}`, { headers: {} });
-await call('liste mauvais jeton', [401, 403], `api/services/list/${OWNER}`, { headers: { 'X-DrivePilot-Token': 'invalide' } });
+await call('liste sans jeton', [401, 403], `api/services/list?email=${encodeURIComponent(OWNER)}`, { headers: {} });
+await call('liste mauvais jeton', [401, 403], `api/services/list?email=${encodeURIComponent(OWNER)}`, { headers: { 'X-DrivePilot-Token': 'invalide' } });
 await call('création sans jeton', [401, 403], 'api/services/create', { method: 'POST', headers: {}, body: valid });
 // Entrées invalides : 400 attendu avant tout accès aux tables.
 await call('montant négatif', 400, 'api/services/create', { method: 'POST', body: { ...valid, amount: -5 } });
-await call('type inconnu', 400, 'api/services/create', { method: 'POST', body: { ...valid, type: 'Pirate' } });
+await call('type vide', 400, 'api/services/create', { method: 'POST', body: { ...valid, type: '' } });
 await call('champ inconnu', 400, 'api/services/create', { method: 'POST', body: { ...valid, role: 'admin' } });
-await call('courriel invalide', 400, 'api/services/list/pas-un-courriel');
-await call('identifiant de suppression invalide', 400, 'api/services/delete/1', { method: 'DELETE', body: { driver_email: OWNER } });
+await call('courriel invalide', 400, 'api/services/list?email=pas-un-courriel');
+await call('identifiant de suppression invalide', 400, 'api/services/delete', { method: 'DELETE', body: { id: '1', driver_email: OWNER } });
 // Cycle nominal.
-const created = await call('création valide', 200, 'api/services/create', { method: 'POST', body: valid });
+const created = await call('création valide', 201, 'api/services/create', { method: 'POST', body: valid });
 createdId = created?.data?.service?.id;
 if(!dry) results.push({ name: 'création : id UUID renvoyé', attendu: 'uuid', obtenu: createdId ? 'présent' : 'absent', ok: /^[0-9a-f-]{36}$/i.test(createdId || '') });
-const listed = await call('liste du propriétaire', 200, `api/services/list/${OWNER}`);
+const listed = await call('liste du propriétaire', 200, `api/services/list?email=${encodeURIComponent(OWNER)}`);
 if(!dry) results.push({ name: 'liste : course créée présente', attendu: 'oui', obtenu: listed?.data?.services?.some(s => s.id === createdId) ? 'oui' : 'non', ok: !!listed?.data?.services?.some(s => s.id === createdId) });
-const other = await call('liste d’un autre propriétaire', 200, 'api/services/list/autre@example.test');
+const other = await call('liste d’un autre propriétaire', 200, `api/services/list?email=${encodeURIComponent('other-' + OWNER)}`);
 if(!dry) results.push({ name: 'isolation : aucune ligne de recette chez un autre', attendu: 'oui', obtenu: (other?.data?.services || []).some(s => s.id === createdId) ? 'fuite' : 'oui', ok: !(other?.data?.services || []).some(s => s.id === createdId) });
-await call('liste complète (serveur)', 200, 'api/services/all');
-await call('suppression avec un mauvais propriétaire', [200, 404], `api/services/delete/${createdId || '00000000-0000-4000-8000-000000000000'}`, { method: 'DELETE', body: { driver_email: 'autre@example.test' } });
+await call('suppression avec un mauvais propriétaire', [200, 404], 'api/services/delete', { method: 'DELETE', body: { id: createdId || valid.service_id, driver_email: 'other-' + OWNER } });
 if(!dry) {
- const still = await call('course toujours présente après suppression refusée', 200, `api/services/list/${OWNER}`);
+ const still = await call('course toujours présente après suppression refusée', 200, `api/services/list?email=${encodeURIComponent(OWNER)}`);
  results.push({ name: 'suppression par un autre propriétaire sans effet', attendu: 'oui', obtenu: still?.data?.services?.some(s => s.id === createdId) ? 'oui' : 'non', ok: !!still?.data?.services?.some(s => s.id === createdId) });
 }
-await call('suppression par le propriétaire', 200, `api/services/delete/${createdId || '00000000-0000-4000-8000-000000000000'}`, { method: 'DELETE', body: { driver_email: OWNER } });
+await call('suppression par le propriétaire', 200, 'api/services/delete', { method: 'DELETE', body: { id: createdId || valid.service_id, driver_email: OWNER } });
 if(!dry) {
- const gone = await call('liste après suppression', 200, `api/services/list/${OWNER}`);
+ const gone = await call('liste après suppression', 200, `api/services/list?email=${encodeURIComponent(OWNER)}`);
  results.push({ name: 'course supprimée', attendu: 'oui', obtenu: gone?.data?.services?.some(s => s.id === createdId) ? 'non' : 'oui', ok: !gone?.data?.services?.some(s => s.id === createdId) });
 }
 console.table(results.map(r => ({ test: r.name, attendu: r.attendu, obtenu: r.obtenu, résultat: r.ok ? 'OK' : 'ÉCHEC' })));

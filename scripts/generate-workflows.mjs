@@ -14,9 +14,9 @@ const condition = (keyName, keyValue) => ({ keyName, condition: 'eq', keyValue }
 const specs = [
  ['Create Driver','POST','api/drivers/create', 'const data = driverInput(input.body);', 'drivers', 'insert'],
  ['Create Service','POST','api/services/create', 'const data = serviceInput(input.body, true);', 'services','insert'],
- ['List Services','GET','api/services/list/:email', "object(input.query ?? {}, []); const data = {email:email(input.params.email)};",'services','get'],
+ ['List Services','GET','api/services/list', "object(input.query ?? {}, ['email']); const data = {email:email(input.query.email)};",'services','get'],
  ['List All Services','GET','api/services/all', 'object(input.query ?? {}, []); const data = {};','services','get'],
- ['Delete Service','DELETE','api/services/delete/:id', 'object(input.body, ["driver_email"]); const data = { id:serviceId(input.params.id), driver_email:email(input.body.driver_email) };','services','deleteRows'],
+ ['Delete Service','DELETE','api/services/delete', 'object(input.query ?? {}, []); object(input.body, ["id", "driver_email"]); const data = { id:serviceId(input.body.id), driver_email:email(input.body.driver_email) };','services','deleteRows'],
 ];
 for (const [i,[name,method,path,check,kind,operation]] of specs.entries()) {
  const y = i * 320;
@@ -27,7 +27,7 @@ for (const [i,[name,method,path,check,kind,operation]] of specs.entries()) {
  link(`Webhook ${name}`,`Validate ${name}`);link(`Validate ${name}`,`Valid ${name}`);link(`Valid ${name}`,`Bad ${name}`,1);
  let prep = `Valid ${name}`;
  if(operation === 'insert') {
-   node(`Prepare ${name}`,'code',{jsCode:`const { randomUUID } = require('crypto'); return [{json:{...$input.first().json.data, ${kind === 'services'?'service_id':'driver_id'}:randomUUID(), created_at:new Date().toISOString(), updated_at:new Date().toISOString()${kind === 'drivers'?", status:'active'":''}}}];`},660,y);
+   node(`Prepare ${name}`,'code',{jsCode:`${kind === 'drivers' ? "const { randomUUID } = require('crypto'); " : ''}return [{json:{...$input.first().json.data, ${kind === 'drivers' ? "driver_id:randomUUID(), " : ''}created_at:new Date().toISOString(), updated_at:new Date().toISOString()${kind === 'drivers'?", status:'active'":''}}}];`},660,y);
    link(prep,`Prepare ${name}`);prep=`Prepare ${name}`;
  }
  const params={resource:'row',operation,dataTableId:table(kind)};
@@ -40,7 +40,8 @@ for (const [i,[name,method,path,check,kind,operation]] of specs.entries()) {
  }
  node(`Store ${name}`,'dataTable',params,880,y,{alwaysOutputData:true});link(prep,`Store ${name}`);
  let body = operation==='deleteRows' ? '({success:true})' : operation==='get' ? '({success:true,services:$input.all().map(x=>x.json).filter(x=>x.service_id).map(x=>({...x,id:x.service_id}))})' : kind==='services' ? '({success:true,service:{...$json,id:$json.service_id}})' : '({success:true,driver:{id:$json.driver_id,email:$json.email}})';
- node(`Respond ${name}`,'respondToWebhook',{respondWith:'json',responseBody:`={{ ${body} }}`,options:{responseCode:operation==='insert'?201:200}},1100,y);link(`Store ${name}`,`Respond ${name}`);
+ node(`Format ${name}`,'code',{jsCode:`return [{json:${body.replaceAll('$json', '$input.first().json')}}];`},1100,y);link(`Store ${name}`,`Format ${name}`);
+ node(`Respond ${name}`,'respondToWebhook',{respondWith:'json',responseBody:'={{ $json }}',options:{responseCode:operation==='insert'?201:200}},1320,y);link(`Format ${name}`,`Respond ${name}`);
 }
 writeFileSync('n8n_workflows/05-crud-operations-workflow.json',JSON.stringify({name:'DrivePilot - Authenticated CRUD',nodes,connections,settings:{executionOrder:'v1'},active:false},null,2)+'\n');
 for (const [filename,kind,fields] of [

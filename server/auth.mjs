@@ -20,14 +20,14 @@ const lifetime = 8 * 60 * 60 * 1000;
 
 export function createAuthMiddleware(accountFile, env = process.env, options = {}) {
 
- const sessions=new Map();
+ const sessions=options.sessionStore || new Map();
 
  const now=options.now || Date.now;
 
- const limiter=createLoginLimiter(now);
+ const limiter=options.limiter || createLoginLimiter(now);
 
  const load=options.loadAccounts || (async()=>{
-
+   if(env.ADMIN_AUTH_JSON) { const value=JSON.parse(env.ADMIN_AUTH_JSON); return Array.isArray(value) ? value : [value]; }
    if(!accountFile) throw new Error('not configured');
 
    const value=JSON.parse(await readFile(accountFile,'utf8'));
@@ -38,7 +38,7 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
 
  const getId=req=>(req.headers.cookie || '').split(';').map(v=>v.trim()).find(v=>v.startsWith('taxi_session='))?.slice(13);
 
- const getUser=req=>{ const session=sessions.get(getId(req));return session && session.expires>now() ? session.user : null; };
+ const getUser=async req=>{ const id=getId(req); if(!id || !/^[a-f0-9]{64}$/.test(id)) return null; const session=await sessions.get(id);return session && session.expires>now() ? session.user : null; };
 
  let active=0;
 
@@ -50,13 +50,13 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
 
   try {
 
-   for(const [id,session] of sessions) if(session.expires<=now()) sessions.delete(id);
+   if(sessions instanceof Map) for(const [id,session] of sessions) if(session.expires<=now()) sessions.delete(id);
 
    if(url.search) throw new HttpError(400,'Paramètres non autorisés.');
 
    if(req.method==='GET' && url.pathname==='/api/auth/session') {
 
-    const user=getUser(req);
+    const user=await getUser(req);
 
     return reply(res,user?200:401,user?{user}:{error:'Session expirée.'});
 
@@ -68,7 +68,7 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
 
    if(url.pathname==='/api/auth/logout') {
 
-    sessions.delete(getId(req));res.setHeader('Set-Cookie',sessionCookie(req,'',0,env));return reply(res,200,{success:true});
+    if(getId(req)) await sessions.delete(getId(req));res.setHeader('Set-Cookie',sessionCookie(req,'',0,env));return reply(res,200,{success:true});
 
    }
 
@@ -90,7 +90,7 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
 
    const key=clientIP(req,env)+'|'+identifier;
 
-   const wait=limiter.retryAfter(key);
+   const wait=await limiter.retryAfter(key);
 
    if(wait) { res.setHeader('Retry-After',String(wait));throw new HttpError(429,'Trop de tentatives. Réessayez après le délai indiqué.'); }
 
@@ -119,19 +119,19 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
 
     if(!validAccount || !timingSafeEqual(expected,actual)) {
 
-     limiter.failure(key);throw new HttpError(401,'Identifiant ou mot de passe incorrect.');
+     await limiter.failure(key);throw new HttpError(401,'Identifiant ou mot de passe incorrect.');
 
     }
 
-    limiter.success(key);
+    await limiter.success(key);
 
-    sessions.delete(getId(req));
+    if(getId(req)) await sessions.delete(getId(req));
 
     const id=randomBytes(32).toString('hex');
 
     const user={id:account.id,email:account.email.trim().toLowerCase(),name:account.username,role:account.role || 'admin'};
 
-    sessions.set(id,{user,expires:now()+lifetime});
+    await sessions.set(id,{user,expires:now()+lifetime});
 
     res.setHeader('Set-Cookie',sessionCookie(req,id,lifetime/1000,env));
 

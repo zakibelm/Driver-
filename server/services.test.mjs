@@ -33,6 +33,19 @@ test('n8n provider fails closed and scopes requests using server identity',async
  let request;
  const provider=createN8nProvider({N8N_URL:'https://n8n.example.test/webhook',N8N_TOKEN:'test-token'},async(url,options)=>{request={url,options};return {ok:true,json:async()=>({success:true,services:[{driver_email:'other@example.test'}]})};});
  assert.deepEqual(await provider.list({role:'chauffeur',email:'a@example.test'}),[]);
- assert.match(request.url,/list\/a%40example.test$/);
+ assert.match(request.url,/list\?email=a%40example.test$/);
  assert.equal(request.options.headers['X-DrivePilot-Token'],'test-token');
+});
+
+test('n8n provider creates UUIDs server-side and deletes through a static scoped route',async()=>{
+ let sent;
+ const provider=createN8nProvider({N8N_URL:'https://n8n.example.test/webhook',N8N_TOKEN:'test-token'},async(url,options)=>{
+  sent={url,body:JSON.parse(options.body)};
+  return {ok:true,json:async()=>({success:true,service:{...sent.body,id:sent.body.service_id}})};
+ });
+ const value=await provider.create({type:'Régulier',amount:10,driver_email:'test@example.test'});
+ assert.match(value.id,/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/);
+ await provider.delete(value.id,'test@example.test');
+ assert.match(sent.url,/\/api\/services\/delete$/);
+ assert.deepEqual(sent.body,{id:value.id,driver_email:'test@example.test'});
 });

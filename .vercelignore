@@ -1,0 +1,10 @@
+.env*
+*.local
+.git
+.pnpm-store
+node_modules
+audit
+n8n_workflows
+scripts
+server/*.test.mjs
+*.log

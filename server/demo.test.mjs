@@ -8,13 +8,20 @@ const storage=()=>{const values=new Map();return {getItem:key=>values.get(key)??
 test('demo CRUD/chat stay local and forged browser settings cannot grant real access',async()=>{
  const localStorage=storage(),sessionStorage=storage();let requests=[];
  localStorage.setItem('user_settings','legacy-settings');
+ localStorage.setItem('drivepilot_demo_services',JSON.stringify([{id:'old-test',amount:45.5}]));
+ localStorage.setItem('drivepilot_demo_chat',JSON.stringify([{user_message:'old-test'}]));
+ sessionStorage.setItem('drivepilot_demo','1');
  const context={exports:{},localStorage,sessionStorage,crypto:{randomUUID},fetch:async(path)=>{requests.push(path);return {status:401,ok:false,json:async()=>({error:'Connexion requise.'})};}};
  const code=ts.transpileModule(readFileSync('services/storage.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
  runInNewContext(code,context);
  const backend=context.exports.backend;
  assert.equal(localStorage.getItem('user_settings'),null);
+ assert.equal(localStorage.getItem('drivepilot_demo_services'),null);
+ assert.equal(localStorage.getItem('drivepilot_demo_chat'),null);
+ assert.equal(sessionStorage.getItem('drivepilot_demo'),null);
  const session=await backend.loginDemo();assert.equal(session.mode,'demo');assert.equal(session.user.role,'chauffeur');
  const before=await backend.getServices();
+ assert.equal(before.length,0);
  const added=await backend.addService({type:'Regular',amount:12.34,date:'2026-10-12T12:00:00.000Z',description:'audit'});
  assert.equal((await backend.getServices()).length,before.length+1);
  await backend.sendChatMessage('bonjour');await backend.deleteService(added.id);

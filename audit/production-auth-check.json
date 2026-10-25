@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-25T18:33:52.872Z",
+  "checks": [
+    {
+      "test": "real-account-login",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "test": "secure-cookie",
+      "ok": true
+    },
+    {
+      "test": "session-visible-on-second-instance",
+      "ok": true
+    },
+    {
+      "test": "logout",
+      "ok": true
+    },
+    {
+      "test": "revoked-on-both-instances",
+      "ok": true
+    }
+  ]
+}

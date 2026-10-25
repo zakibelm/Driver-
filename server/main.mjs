@@ -67,7 +67,7 @@ export function startServer(env = process.env) {
  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
  const settings = { ...env, NODE_ENV: env.NODE_ENV || 'production' };
  const accountFile = externalAccountFile(settings.ADMIN_AUTH_FILE, root);
- if(!accountFile) console.warn('ADMIN_AUTH_FILE absent, relatif ou dans le projet : la connexion réelle renverra 503 (la démo reste disponible).');
+ if(!accountFile && !settings.ADMIN_AUTH_JSON) console.warn('Compte administrateur absent : la connexion réelle renverra 503 (la démo reste disponible).');
  const server = createServer(createHandler(settings, { distDir: path.join(root, 'dist'), accountFile }));
  server.requestTimeout = 30000; server.headersTimeout = 15000; server.keepAliveTimeout = 5000; server.maxRequestsPerSocket = 1000;
  const port = Number(settings.PORT || 3012), host = settings.HOST || '127.0.0.1';
@@ -75,4 +75,8 @@ export function startServer(env = process.env) {
  return server;
 }
 
-if(process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) startServer();
+if(process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+ const localConfig = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.env.local');
+ try { process.loadEnvFile(localConfig); } catch(error) { if(error.code !== 'ENOENT') throw error; }
+ startServer();
+}

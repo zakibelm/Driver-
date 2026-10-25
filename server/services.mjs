@@ -5,7 +5,7 @@ export function createServicesMiddleware({ getUser, provider }) {
   const url = new URL(req.url, 'http://local');
   if(url.pathname !== '/api/services' && !url.pathname.startsWith('/api/services/')) return next();
   try {
-   const user = getUser(req);
+   const user = await getUser(req);
    if(!user || !['admin','chauffeur'].includes(user.role)) throw new HttpError(401,'Connexion requise.');
    if(url.search) throw new HttpError(400,'Paramètres non autorisés.');
    sameOrigin(req);

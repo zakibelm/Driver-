@@ -17,6 +17,11 @@ export function sameOrigin(req) {
 }
 export async function jsonBody(req, max = 8192) {
   if(!req.headers['content-type']?.startsWith('application/json')) throw new HttpError(415,'JSON requis.');
+  if(req.body !== undefined) {
+    const raw=typeof req.body === 'string' || Buffer.isBuffer(req.body) ? req.body : JSON.stringify(req.body);
+    if(Buffer.byteLength(raw)>max) throw new HttpError(413,'Requête trop volumineuse.');
+    try { return JSON.parse(raw.toString()); } catch { throw new HttpError(400,'JSON invalide.'); }
+  }
   let size = 0, chunks = [];
   for await (const chunk of req) {
     size += chunk.length;

@@ -8,6 +8,18 @@ Application React 19 / Vite 6 pour suivre les courses, consulter les statistique
 
 ## Démarrage
 
+### Production Vercel
+
+Le projet `drivepilot` utilise Vite pour l’interface et une fonction Node.js 24 pour `/api/*`. `vercel.json` configure les routes et en-têtes de sécurité. `.vercelignore` exclut les fichiers privés, les tests, les workflows n8n, les scripts d’administration et les captures de la publication.
+
+Les variables de production `N8N_TOKEN` et `ADMIN_AUTH_JSON` sont secrètes dans Vercel. `ADMIN_AUTH_JSON` contient le compte administrateur et une empreinte scrypt, jamais le mot de passe en clair. `N8N_URL` désigne les webhooks dédiés et `AUTH_SESSION_STORE=n8n` active les sessions partagées. Les variables n’ont aucun préfixe public.
+
+Les sessions sont stockées dans `drivepilot_sessions`, avec uniquement le SHA-256 du jeton de session, et les tentatives de connexion dans `drivepilot_login_attempts`, avec des identifiants hachés par HMAC. Le workflow `DrivePilot - Authentification production` assure les lectures, les révocations, le délai progressif entre tentatives et le nettoyage horaire des entrées expirées. Une déconnexion reste valable sur toutes les instances Vercel.
+
+Le mode démo commence vide. Une migration locale efface uniquement les anciennes courses, conversations et sessions de démonstration, sans toucher aux courses réelles.
+
+### Démarrage local
+
 
 
 Node.js 22 ou 24. Les dépendances sont verrouillées dans `pnpm-lock.yaml` :
@@ -96,7 +108,7 @@ Sessions serveur en mémoire de huit heures, cookie HttpOnly/SameSite=Strict, Se
 
 3. Créer la credential **DrivePilot Header Auth**, nom d’en-tête **X-DrivePilot-Token**, valeur identique à N8N_TOKEN. L’associer aux cinq webhooks après import du workflow CRUD. Le JSON ne contient que le nom de credential.
 
-4. Autoriser uniquement le module Node crypto pour les nœuds Code si la configuration du runner le requiert (`NODE_FUNCTION_ALLOW_BUILTIN=crypto`).
+4. Le serveur génère les UUID des courses et les transmet dans `service_id`. Les nœuds Code des courses n’importent aucun module. Le workflow générique de création des chauffeurs utilise encore `crypto` ; le workflow connecté des courses ne contient pas cette route.
 
 5. Activer le workflow CRUD, puis définir N8N_URL/N8N_TOKEN sur le serveur DrivePilot.
 
@@ -108,7 +120,11 @@ Les requêtes du navigateur vont seulement à /api/services. Le serveur impose l
 
 
 
-Les workflows n’ont pas été activés ni testés contre une instance réelle par cette mission. Une recette d’import est indispensable pour la version installée de n8n. Les Data Tables et leur identifiant de course service_id sont nouveaux ; les anciennes lignes doivent être migrées explicitement si nécessaire.
+Le 25 octobre 2026, le workflow dédié `DrivePilot - Courses (connexion application)` a été activé sur `https://n8n.xtream.space/`, en réutilisant la table `drivepilot_services`. La création d’une course synthétique avec un type personnalisé, sa relecture, l’isolation entre propriétaires et sa suppression ont été vérifiées. Les accès sans jeton ou avec un mauvais jeton renvoient 403. Les autres workflows et les anciennes courses restent intacts. Le rapport non secret est dans `audit/n8n-connexion.json`.
+
+Cette instance requiert des routes fixes : `GET api/services/list?email=…` et `DELETE api/services/delete` avec `{id, driver_email}`. Les réponses JSON sont préparées dans des nœuds Code avant le nœud de réponse. `n8n_workflows/06-connexion-application-workflow.json` correspond au workflow connecté ; `05` reste le modèle générique régénérable.
+
+`server/main.mjs` charge `.env.local` au démarrage. Ce fichier, ignoré par Git, contient l’URL des webhooks et leur jeton dédié ; la clé API de gestion n’y est pas conservée. `scripts/connect-n8n.mjs` prépare ou met à jour uniquement le workflow dédié (clé temporaire `N8N_SETUP_API_KEY` requise). `node scripts/verify-n8n-connection.mjs` crée puis supprime une course de test avec un propriétaire unique, sans consulter de vraies courses. Une session réelle exige toujours un compte `ADMIN_AUTH_FILE` valide hors du projet.
 
 
 
