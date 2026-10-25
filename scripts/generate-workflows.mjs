@@ -14,9 +14,10 @@ const condition = (keyName, keyValue) => ({ keyName, condition: 'eq', keyValue }
 const specs = [
  ['Create Driver','POST','api/drivers/create', 'const data = driverInput(input.body);', 'drivers', 'insert'],
  ['Create Service','POST','api/services/create', 'const data = serviceInput(input.body, true);', 'services','insert'],
- ['List Services','GET','api/services/list/:email', "object(input.query ?? {}, []); const data = {email:email(input.params.email)};",'services','get'],
+ // Chemins fixes : n8n préfixe d'un UUID les chemins à paramètres ; courriel et id passent dans le corps (hors journaux d'URL).
+ ['List Services','POST','api/services/list', 'object(input.query ?? {}, []); object(input.body, ["email"]); const data = {email:email(input.body.email)};','services','get'],
  ['List All Services','GET','api/services/all', 'object(input.query ?? {}, []); const data = {};','services','get'],
- ['Delete Service','DELETE','api/services/delete/:id', 'object(input.body, ["driver_email"]); const data = { id:serviceId(input.params.id), driver_email:email(input.body.driver_email) };','services','deleteRows'],
+ ['Delete Service','DELETE','api/services/delete', 'object(input.query ?? {}, []); object(input.body, ["id","driver_email"]); const data = { id:serviceId(input.body.id), driver_email:email(input.body.driver_email) };','services','deleteRows'],
 ];
 for (const [i,[name,method,path,check,kind,operation]] of specs.entries()) {
  const y = i * 320;

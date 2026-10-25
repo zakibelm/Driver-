@@ -56,7 +56,11 @@ Copier `.env.example` vers `.env.local` et renseigner les variables sur la machi
 
 | --- | --- |
 
-| ADMIN_AUTH_FILE | Chemin absolu du compte JSON, hors du projet et de toute racine HTTP. Obligatoire pour la connexion réelle. |
+| ADMIN_AUTH_FILE | Facultatif. Compte historique en lecture seule (JSON), hors du projet. |
+| ACCOUNTS_FILE | Chemin absolu du fichier des comptes inscrits (créé automatiquement, permissions 600). Le dossier doit exister et se trouver hors du projet, ex. `/var/lib/drivepilot/accounts.json`. Active l'inscription et « Mot de passe oublié ». |
+| ADMIN_EMAILS | Courriels administrateurs, séparés par des virgules. Après confirmation du courriel, ces comptes sont admin actifs ; ils ne peuvent pas être rétrogradés depuis l'interface. |
+| PUBLIC_URL | Adresse publique utilisée dans les liens des courriels, ex. `https://drivepilot.partageons.net`. Obligatoire en production. |
+| MAIL_PROVIDER | `n8n` (défaut : workflow `07-send-mail`, credential SMTP « DrivePilot SMTP ») ou `log` (le lien est écrit dans le journal serveur, pour amorcer le premier compte). |
 
 | N8N_URL | URL HTTPS de base, terminant généralement par /webhook. HTTP accepté uniquement en boucle locale. |
 

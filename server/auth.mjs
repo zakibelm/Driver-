@@ -12,6 +12,8 @@ import { object, text } from './validation.mjs';
 
 import { createLoginLimiter, clientIP } from './limiter.mjs';
 
+import { adminEmails } from './accounts.mjs';
+
 const derive = promisify(scrypt);
 
 const lifetime = 8 * 60 * 60 * 1000;
@@ -28,13 +30,15 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
 
  const load=options.loadAccounts || (async()=>{
 
-   if(!accountFile) throw new Error('not configured');
-
+   // Comptes inscrits (magasin) + compte historique facultatif (ADMIN_AUTH_FILE, lecture seule).
+   const registered=options.store ? (await options.store.load()).accounts : [];
+   if(!accountFile) { if(options.store) return registered; throw new Error('not configured'); }
    const value=JSON.parse(await readFile(accountFile,'utf8'));
-
-   return Array.isArray(value) ? value : [value];
+   return [...registered, ...(Array.isArray(value) ? value : [value])];
 
  });
+
+ const admins=adminEmails(env);
 
  const getId=req=>(req.headers.cookie || '').split(';').map(v=>v.trim()).find(v=>v.startsWith('taxi_session='))?.slice(13);
 
@@ -109,7 +113,10 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
     if(!Array.isArray(accounts)) throw new HttpError(503,'Configuration de compte invalide.');
 
     const norm=v=>typeof v==='string' ? v.trim().toLowerCase() : undefined;
-    const account=accounts.find(a=>a && typeof a==='object' && [norm(a.email),norm(a.username)].includes(identifier));
+    // Courriel d'abord ; le nom d'utilisateur n'est accepté que s'il est unique (les noms ne le sont pas forcément).
+    const valid=accounts.filter(a=>a && typeof a==='object');
+    const byName=valid.filter(a=>norm(a.username)===identifier);
+    const account=valid.find(a=>norm(a.email)===identifier) || (byName.length===1 ? byName[0] : undefined);
 
     const validAccount=account && typeof account.email==='string' && typeof account.username==='string' && (typeof account.id==='string' || typeof account.id==='number') && typeof account.salt==='string' && account.salt.length<=256 && /^[a-f0-9]{128}$/i.test(account.passwordHash || '') && ['admin','chauffeur'].includes(account.role || 'admin');
 
@@ -123,13 +130,19 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
 
     }
 
+    // Mot de passe correct : l'état du compte n'est révélé qu'au titulaire.
+    if(account.status==='pending') throw new HttpError(403,'Votre compte attend l’approbation de l’administrateur.');
+    if(account.status==='disabled') throw new HttpError(403,'Ce compte est désactivé. Contactez l’administrateur.');
+    if(account.status && account.status!=='active') throw new HttpError(403,'Confirmez d’abord votre adresse courriel.');
+
     limiter.success(key);
 
     sessions.delete(getId(req));
 
     const id=randomBytes(32).toString('hex');
 
-    const user={id:account.id,email:account.email.trim().toLowerCase(),name:account.username,role:account.role || 'admin'};
+    const email=account.email.trim().toLowerCase();
+    const user={id:account.id,email,name:account.username,role:admins.has(email) ? 'admin' : (account.role || 'admin')};
 
     sessions.set(id,{user,expires:now()+lifetime});
 
@@ -144,6 +157,8 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
  };
 
  middleware.getUser=getUser;
+ // Ferme toutes les sessions d'un compte (mot de passe changé, droits modifiés, compte désactivé).
+ middleware.revokeUser=id=>{ for(const [sid,session] of sessions) if(String(session.user.id)===String(id)) sessions.delete(sid); };
 
  return middleware;
 
