@@ -1,0 +1,50 @@
+{
+  "at": "2026-10-25T18:52:02.025Z",
+  "base": "https://drivepilot-71qkekac7-zaks-projects-f05d04ab.vercel.app",
+  "checks": [
+    {
+      "test": "unauthenticated-session",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "test": "production-login",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "test": "secure-session-cookie",
+      "ok": true
+    },
+    {
+      "test": "persistent-production-session",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "test": "invalid-course-rejected-without-write",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "test": "private-config-blocked",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "test": "unknown-api-is-not-spa",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "test": "production-logout",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "test": "session-revoked-after-logout",
+      "status": 401,
+      "ok": true
+    }
+  ]
+}
