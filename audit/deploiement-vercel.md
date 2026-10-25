@@ -1,31 +1,33 @@
 # Déploiement DrivePilot — 25 octobre 2026
 
-- Projet Vercel : `drivepilot`, `prj_3ZGOiqAKxnmAfa4DZnuSoroykpEg`.
-- Équipe : `zaks-projects-f05d04ab`.
-- Version déployée : commit `3a62ed1` de `fix/security-hardening`.
-- Déploiement : `dpl_FcJPtHV36rfo3zSBBPXmoFzXJyfK`, état READY, environnement production.
-- Adresse principale : https://drivepilot-zaks-projects-f05d04ab.vercel.app/
-- Interface React/Vite et fonction API Node.js 24.
+- Version applicative : `bef04eb`, branche `fix/security-hardening`.
+- Projet Vercel : `prj_3ZGOiqAKxnmAfa4DZnuSoroykpEg`.
+- Déploiement : `dpl_2rc4iG5BWye1TUmfSwcHdKGkznCM`, READY, production.
+- Adresse : https://drivepilot-zaks-projects-f05d04ab.vercel.app/
+- Interface et API sur Vercel ; données persistantes dans les Data Tables n8n.
 
-## Réinitialisation
+## Accès et données
 
-Les anciennes données et conversations de démonstration du navigateur ont été effacées par la migration locale, et la génération des trois courses fictives a été supprimée. Les courses de test créées dans n8n ont été supprimées et leur absence confirmée. Aucune course réelle n’a été supprimée.
+Les courses fictives et les fixtures de vérification ont été supprimées. Aucune course réelle supprimée. Le bouton Mode Démo a été retiré. Les placeholders et le texte sous la connexion indiquent test@drivepilot.com / test1234 : cet accès ouvre un espace local vide, isolé des données réelles.
 
-## Connexion réelle
+Le compte administrateur est enregistré avec une empreinte scrypt. Aucun mot de passe en clair dans GitHub ou les fichiers publiés. Les sessions et limitations de connexion sont partagées dans n8n ; les jetons de session sont conservés uniquement sous forme d’empreintes.
 
-Le compte administrateur est configuré dans une variable Vercel secrète avec son empreinte scrypt. Le mot de passe en clair n’est stocké ni dans le code, ni dans les fichiers publiés, ni dans GitHub. Les sessions et limitations de connexion sont partagées dans n8n. Le jeton du cookie n’est pas stocké en clair dans les tables de sessions.
+Inscription chauffeur avec confirmation du courriel, récupération avec lien à usage unique et expiration. Les liens sont stockés sous forme d’empreintes ; changer le mot de passe invalide les anciennes sessions. SMTP n8n configuré avec limitation des envois et sans conservation des exécutions contenant les liens.
+
+## Protection et assistant
+
+Après autorisation, protection Vercel standard : adresse principale publique avec connexion DrivePilot obligatoire pour les données ; URLs techniques et previews protégées par Vercel.
+
+Vercel AI Gateway activé après consentement, avec identité OIDC et SDK officiel @vercel/oidc. Les noms de services personnalisés, notes et identifiants ne sont pas transmis. Les statistiques agrégées sont incluses uniquement si le partage est activé. Modèle nvidia/nemotron-3.5-lightning-free, sans bascule automatique payante.
 
 ## Vérifications
 
-- 27 tests locaux réussis, vérification TypeScript et compilation réussies.
-- Aucun jeton n8n ni compte administrateur dans le JavaScript destiné au navigateur.
-- Vérifications réelles sur Vercel : connexion HTTP 200, session persistante HTTP 200, course invalide refusée sans écriture HTTP 400, fichier privé refusé HTTP 403, route API inconnue HTTP 404, déconnexion HTTP 200 et session révoquée HTTP 401.
-- Rapport détaillé sans secrets : `vercel-production-check.json`.
-- Scan des logs d’erreur du déploiement : aucun résultat pendant la vérification.
+- Suite locale précédente : 29 tests réussis, TypeScript et compilation réussis. Après la correction serveur finale : les 5 tests comptes/assistant relancés avec succès. Compilation Vercel réussie.
+- Aucun jeton n8n ni empreinte administrateur dans le JavaScript navigateur.
+- 13 contrôles publics réussis : connexion réelle, session persistante, cookie sécurisé, accès anonyme refusé, requêtes invalides sans écriture, injection de rôle refusée, récupération générique, lien invalide refusé, réponse Gateway, fichiers privés bloqués, déconnexion et révocation.
+- Stockage réel n8n vérifié : confirmation, consommation concurrente du jeton une seule fois, changement de mot de passe et invalidation de session. Fixtures supprimées.
+- Contrôle visuel production : connexion, inscription, mot de passe oublié, espace d’essai vide, déconnexion.
+- Rapports sans secrets : public-production-check.json et accounts-storage-check.json.
+- Aucun courriel réel envoyé pendant les vérifications. La réception dans une boîte de messagerie reste à valider ; autorisation pour un courriel technique en attente.
 
-## Choix en attente d’autorisation
-
-- Vercel Authentication protège encore les adresses de production. La connexion Vercel s’ajoute donc à la connexion DrivePilot. Le passage au mode standard, qui rend seulement l’adresse principale accessible avec la connexion DrivePilot tout en protégeant les URLs de test, a été refusé par le contrôle automatique faute d’autorisation explicite ; une question a été soumise à l’utilisateur.
-- L’assistant reste sur le fournisseur OpenRouter d’origine, sans clé configurée. Le remplacement par Vercel AI Gateway n’a pas été appliqué : le contrôle automatique exige l’accord explicite pour l’envoi des messages et statistiques agrégées à ce fournisseur ; une question a été soumise à l’utilisateur.
-
-Les captures locales, workflows, scripts d’administration, tests et secrets sont exclus des fichiers publiés grâce à `.vercelignore`.
+Les secrets, captures, workflows, scripts administratifs et tests sont exclus du déploiement par .vercelignore.

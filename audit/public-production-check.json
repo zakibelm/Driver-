@@ -1,0 +1,72 @@
+{
+  "at": "2026-10-25T19:32:46.098Z",
+  "base": "https://drivepilot-zaks-projects-f05d04ab.vercel.app",
+  "checks": [
+    {
+      "test": "public-login-page",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "test": "unauthenticated-api-protected",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "test": "real-account-login",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "test": "secure-cookie",
+      "ok": true
+    },
+    {
+      "test": "persistent-session",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "test": "invalid-course-rejected-without-write",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "test": "registration-role-injection-refused",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "test": "forgot-password-generic-response-no-mail",
+      "status": 202,
+      "ok": true
+    },
+    {
+      "test": "invalid-reset-link-refused",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "test": "authorized-ai-gateway",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "test": "private-files-blocked",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "test": "logout",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "test": "session-revoked",
+      "status": 401,
+      "ok": true
+    }
+  ],
+  "emailsSent": 0,
+  "coursesCreated": 0
+}
