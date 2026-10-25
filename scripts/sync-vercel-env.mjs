@@ -6,13 +6,16 @@ const cli=process.env.VERCEL_CLI_PATH;
 if(!cli)throw new Error('VERCEL_CLI_PATH requis.');
 const project=JSON.parse(readFileSync(new URL('../.vercel/project.json',import.meta.url),'utf8'));
 if(project.projectId!=='prj_3ZGOiqAKxnmAfa4DZnuSoroykpEg'||project.orgId!=='team_EndMEA9hbrmj92cWFT0quuYF')throw new Error('Projet Vercel inattendu.');
-const keys=['N8N_URL','N8N_TOKEN','ADMIN_AUTH_JSON','AUTH_SESSION_STORE'];
+let keys=['N8N_URL','N8N_TOKEN','ADMIN_AUTH_JSON','AUTH_SESSION_STORE'];
+for(const key of ['ACCOUNT_STORE','PUBLIC_APP_URL','AI_GATEWAY_MODEL'])if(process.env[key])keys.push(key);
 if(process.env.OPENROUTER_API_KEY)keys.push('OPENROUTER_API_KEY');
+if(process.env.DRIVEPILOT_SYNC_KEYS)keys=process.env.DRIVEPILOT_SYNC_KEYS.split(',').filter(key=>keys.includes(key));
 for(const name of keys) {
  if(!process.env[name])throw new Error('Variable manquante : '+name);
  const secret=['N8N_TOKEN','ADMIN_AUTH_JSON','OPENROUTER_API_KEY'].includes(name);
  const args=[cli,'env','add',name,'production','--scope','zaks-projects-f05d04ab',...(secret?['--sensitive']:[])];
- const result=spawnSync(process.execPath,args,{input:process.env[name]+'\n',encoding:'utf8',windowsHide:true,timeout:120000});
+ let result=spawnSync(process.execPath,args,{input:process.env[name]+'\n',encoding:'utf8',windowsHide:true,timeout:120000});
+ if(result.status!==0&&/already exists/i.test(String(result.stderr)+String(result.stdout)))result=spawnSync(process.execPath,[cli,'env','update',name,'production','--scope','zaks-projects-f05d04ab','--yes',...(secret?['--sensitive']:[])],{input:process.env[name]+'\n',encoding:'utf8',windowsHide:true,timeout:120000});
  if(result.status!==0) {
   let message=String(result.stderr||result.error?.message||'');
   for(const key of keys)if(process.env[key])message=message.replaceAll(process.env[key],'[secret]');

@@ -13,14 +13,17 @@ export function chatMessages(message, services = []) {
 export function createOpenRouterProvider(env = process.env, fetcher = fetch) {
  return {
   async complete(message, services) {
-   if(!env.OPENROUTER_API_KEY) throw new HttpError(503,'Assistant non configuré sur le serveur.');
+   const gatewayToken=env.AI_GATEWAY_API_KEY || (env.VERCEL ? process.env.VERCEL_OIDC_TOKEN : env.VERCEL_OIDC_TOKEN);
+   const useGateway=!env.OPENROUTER_API_KEY && !!gatewayToken;
+   const token=env.OPENROUTER_API_KEY || gatewayToken;
+   if(!token) throw new HttpError(503,'Assistant non configuré sur le serveur.');
    try {
-    const response=await fetcher('https://openrouter.ai/api/v1/chat/completions',{
-     method:'POST',headers:{Authorization:`Bearer ${env.OPENROUTER_API_KEY}`,'Content-Type':'application/json','X-Title':'DrivePilot'},
-     body:JSON.stringify({model:env.OPENROUTER_MODEL || 'openrouter/free',messages:chatMessages(message,services),max_tokens:800}),
+    const response=await fetcher(useGateway?'https://ai-gateway.vercel.sh/v1/chat/completions':'https://openrouter.ai/api/v1/chat/completions',{
+     method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json','X-Title':'DrivePilot'},
+     body:JSON.stringify({model:useGateway?(env.AI_GATEWAY_MODEL || 'nvidia/nemotron-3.5-lightning-free'):(env.OPENROUTER_MODEL || 'openrouter/free'),messages:chatMessages(message,services),max_tokens:800}),
      signal:AbortSignal.timeout(30000),redirect:'error'
     });
-    if(!response.ok) throw new Error('provider');
+    if(!response.ok) { console.error('DrivePilot AI upstream HTTP '+response.status); throw new Error('provider'); }
     const data=await response.json();const text=data.choices?.[0]?.message?.content;
     if(typeof text!=='string' || !text.trim()) throw new Error('empty');
     return text.slice(0,12000);

@@ -38,7 +38,7 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
 
  const getId=req=>(req.headers.cookie || '').split(';').map(v=>v.trim()).find(v=>v.startsWith('taxi_session='))?.slice(13);
 
- const getUser=async req=>{ const id=getId(req); if(!id || !/^[a-f0-9]{64}$/.test(id)) return null; const session=await sessions.get(id);return session && session.expires>now() ? session.user : null; };
+ const getUser=async req=>{ const id=getId(req); if(!id || !/^[a-f0-9]{64}$/.test(id)) return null; const session=await sessions.get(id);if(!session || session.expires<=now())return null;if(options.accounts){const account=await options.accounts.find(session.user.email);if(!account||!account.verified||account.id!==session.user.id||account.role!==session.user.role||account.authVersion!==session.authVersion)return null;}return session.user; };
 
  let active=0;
 
@@ -104,14 +104,14 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
 
     let accounts;
 
-    try { accounts=await load(); } catch { throw new HttpError(503,'Compte non configuré sur ce serveur.'); }
+    try { accounts=options.accounts ? [await options.accounts.find(identifier)] : await load(); } catch { throw new HttpError(503,'Compte non configuré sur ce serveur.'); }
 
     if(!Array.isArray(accounts)) throw new HttpError(503,'Configuration de compte invalide.');
 
     const norm=v=>typeof v==='string' ? v.trim().toLowerCase() : undefined;
     const account=accounts.find(a=>a && typeof a==='object' && [norm(a.email),norm(a.username)].includes(identifier));
 
-    const validAccount=account && typeof account.email==='string' && typeof account.username==='string' && (typeof account.id==='string' || typeof account.id==='number') && typeof account.salt==='string' && account.salt.length<=256 && /^[a-f0-9]{128}$/i.test(account.passwordHash || '') && ['admin','chauffeur'].includes(account.role || 'admin');
+    const validAccount=account && typeof account.email==='string' && typeof account.username==='string' && (typeof account.id==='string' || typeof account.id==='number') && typeof account.salt==='string' && account.salt.length<=256 && /^[a-f0-9]{128}$/i.test(account.passwordHash || '') && ['admin','chauffeur'].includes(account.role || (options.accounts?'':'admin'));
 
     const expected=validAccount ? Buffer.from(account.passwordHash,'hex') : Buffer.alloc(64);
 
@@ -122,6 +122,7 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
      await limiter.failure(key);throw new HttpError(401,'Identifiant ou mot de passe incorrect.');
 
     }
+    if(account.verified===false)throw new HttpError(403,'Confirmez votre adresse avec le lien reçu par courriel.');
 
     await limiter.success(key);
 
@@ -129,9 +130,9 @@ export function createAuthMiddleware(accountFile, env = process.env, options = {
 
     const id=randomBytes(32).toString('hex');
 
-    const user={id:account.id,email:account.email.trim().toLowerCase(),name:account.username,role:account.role || 'admin'};
+    const user={id:account.id,email:account.email.trim().toLowerCase(),name:account.name||account.username,role:account.role || 'admin'};
 
-    await sessions.set(id,{user,expires:now()+lifetime});
+    await sessions.set(id,{user,expires:now()+lifetime,...(account.authVersion?{authVersion:account.authVersion}:{})});
 
     res.setHeader('Set-Cookie',sessionCookie(req,id,lifetime/1000,env));
 

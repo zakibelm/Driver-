@@ -16,7 +16,11 @@ Les variables de production `N8N_TOKEN` et `ADMIN_AUTH_JSON` sont secrètes dans
 
 Les sessions sont stockées dans `drivepilot_sessions`, avec uniquement le SHA-256 du jeton de session, et les tentatives de connexion dans `drivepilot_login_attempts`, avec des identifiants hachés par HMAC. Le workflow `DrivePilot - Authentification production` assure les lectures, les révocations, le délai progressif entre tentatives et le nettoyage horaire des entrées expirées. Une déconnexion reste valable sur toutes les instances Vercel.
 
-Le mode démo commence vide. Une migration locale efface uniquement les anciennes courses, conversations et sessions de démonstration, sans toucher aux courses réelles.
+L’accès d’essai utilise `test@drivepilot.com` et `test1234`, affichés comme exemples sur le formulaire. Ce compte n’est pas un compte n8n : ses courses et conversations restent dans le navigateur, sans session serveur ni accès aux données réelles. Il commence vide et aucun bouton « Mode Démo » ne figure sur la connexion. Le formulaire d’inscription et le lien « Mot de passe oublié » concernent uniquement les comptes réels.
+
+Les comptes réels sont conservés dans `drivepilot_accounts`, les jetons hachés de confirmation/récupération dans `drivepilot_account_tokens`. Les inscriptions reçoivent uniquement le rôle chauffeur et exigent la confirmation du courriel. Les liens de confirmation expirent après 24 heures, ceux de récupération après 30 minutes ; ils sont à usage unique et liés à la version du mot de passe. Un changement de mot de passe invalide les anciennes sessions et les anciens liens. Les courriels utilisent la configuration SMTP déjà présente dans n8n, avec un délai minimal de cinq minutes entre envois par compte. Les exécutions de ce workflow ne conservent pas les liens de récupération. Aucun courriel réel n’est envoyé par les tests automatiques.
+
+L’adresse principale utilise uniquement la connexion DrivePilot. Les URL techniques de déploiement et les previews restent protégées par Vercel Authentication. Sur Vercel, sans clé OpenRouter, l’assistant autorisé utilise OIDC avec AI Gateway et le modèle gratuit configuré par `AI_GATEWAY_MODEL`. Les descriptions, noms personnalisés, identifiants et courriels des courses sont exclus de son contexte ; seules les statistiques agrégées sont jointes si l’utilisateur active cette option.
 
 ### Démarrage local
 

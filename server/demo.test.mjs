@@ -19,7 +19,7 @@ test('demo CRUD/chat stay local and forged browser settings cannot grant real ac
  assert.equal(localStorage.getItem('drivepilot_demo_services'),null);
  assert.equal(localStorage.getItem('drivepilot_demo_chat'),null);
  assert.equal(sessionStorage.getItem('drivepilot_demo'),null);
- const session=await backend.loginDemo();assert.equal(session.mode,'demo');assert.equal(session.user.role,'chauffeur');
+ const session=await backend.login('test@drivepilot.com','test1234');assert.equal(session.mode,'demo');assert.equal(session.user.role,'chauffeur');assert.equal(session.user.email,'test@drivepilot.com');
  const before=await backend.getServices();
  assert.equal(before.length,0);
  const added=await backend.addService({type:'Regular',amount:12.34,date:'2026-10-12T12:00:00.000Z',description:'audit'});

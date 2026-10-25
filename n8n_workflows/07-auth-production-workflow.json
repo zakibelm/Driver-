@@ -17,7 +17,7 @@
         0,
         0
       ],
-      "webhookId": "a9ef38c9-b5fc-48ce-800c-e3951dd0b29c",
+      "webhookId": "d135344b-c1fb-4ee4-8f76-b22e35612b31",
       "credentials": {
         "httpHeaderAuth": {
           "id": "5qfz2V5523XWA4Dy",
@@ -31,7 +31,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "parameters": {
-        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function hash(v){if(typeof v!==\"string\"||!/^[a-f0-9]{64}$/.test(v))throw Error(\"hash\");return v;}const input=$input.first().json;try{obj(input.body,[\"hash\",\"user\",\"expires\"]);const b=input.body;obj(b.user,[\"id\",\"email\",\"name\",\"role\"]);if(![\"admin\",\"chauffeur\"].includes(b.user.role)||![\"string\",\"number\"].includes(typeof b.user.id)||typeof b.user.email!==\"string\"||typeof b.user.name!==\"string\"||!b.user.name||b.user.name.length>100||!Number.isFinite(b.expires)||b.expires<=Date.now()||b.expires>Date.now()+28900000)throw Error(\"session\");const data={session_hash:hash(b.hash),user_json:JSON.stringify(b.user),expires_at:b.expires};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
+        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function hash(v){if(typeof v!==\"string\"||!/^[a-f0-9]{64}$/.test(v))throw Error(\"hash\");return v;}const input=$input.first().json;try{obj(input.body,[\"hash\",\"user\",\"expires\",\"authVersion\"]);const b=input.body;obj(b.user,[\"id\",\"email\",\"name\",\"role\"]);if(![\"admin\",\"chauffeur\"].includes(b.user.role)||![\"string\",\"number\"].includes(typeof b.user.id)||typeof b.user.email!==\"string\"||typeof b.user.name!==\"string\"||!b.user.name||b.user.name.length>100||!Number.isFinite(b.expires)||b.expires<=Date.now()||b.expires>Date.now()+28900000)throw Error(\"session\");const data={session_hash:hash(b.hash),user_json:JSON.stringify(b.authVersion?{user:b.user,authVersion:hash(b.authVersion)}:b.user),expires_at:b.expires};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
       },
       "position": [
         220,
@@ -172,7 +172,7 @@
         0,
         300
       ],
-      "webhookId": "80cf9fc9-f02b-4347-b48b-3d90e2ebba94",
+      "webhookId": "e27c2e84-6846-4079-aba8-45c27d3f44a0",
       "credentials": {
         "httpHeaderAuth": {
           "id": "5qfz2V5523XWA4Dy",
@@ -282,7 +282,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "parameters": {
-        "jsCode": "const row=$input.all().map(x=>x.json).find(x=>x.session_hash&&x.expires_at>Date.now());return [{json:{success:true,session:row?{user:JSON.parse(row.user_json),expires:row.expires_at}:null}}];"
+        "jsCode": "const row=$input.all().map(x=>x.json).find(x=>x.session_hash&&x.expires_at>Date.now());const value=row?JSON.parse(row.user_json):null;return [{json:{success:true,session:row?{user:value.user||value,expires:row.expires_at,...(value.authVersion?{authVersion:value.authVersion}:{})}:null}}];"
       },
       "position": [
         1100,
@@ -322,7 +322,7 @@
         0,
         600
       ],
-      "webhookId": "8b38ae8d-d26b-444c-bd94-e818e958cb2a",
+      "webhookId": "ce37a9a8-fa01-43d1-b9d9-498811bdf868",
       "credentials": {
         "httpHeaderAuth": {
           "id": "5qfz2V5523XWA4Dy",
@@ -473,7 +473,7 @@
         0,
         900
       ],
-      "webhookId": "67ccab68-8eb8-43da-b56e-29dbfe6a86a0",
+      "webhookId": "ffe23e5a-44f7-415c-9649-adf27b21ec8b",
       "credentials": {
         "httpHeaderAuth": {
           "id": "5qfz2V5523XWA4Dy",
@@ -628,7 +628,7 @@
         0,
         1200
       ],
-      "webhookId": "ce601f0c-cc18-45c9-ba80-7df72a46d392",
+      "webhookId": "a47ba251-9259-48cd-9f60-5cf879d96c0b",
       "credentials": {
         "httpHeaderAuth": {
           "id": "5qfz2V5523XWA4Dy",
@@ -1204,7 +1204,10 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "timezone": "America/Toronto"
+    "timezone": "America/Toronto",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false
   },
   "active": false
 }

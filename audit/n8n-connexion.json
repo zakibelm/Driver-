@@ -46,5 +46,8 @@
   },
   "sessionsTableId": "q7SLYZ1QPiBIaw4j",
   "loginAttemptsTableId": "ziRHpTubgB9UXzDy",
-  "authWorkflowId": "vFvG09lztlkn5F4e"
+  "authWorkflowId": "vFvG09lztlkn5F4e",
+  "accountsTableId": "cAF1gVR3aj80KhP8",
+  "actionTokensTableId": "PYGOA1A6g1dAZIbH",
+  "accountsWorkflowId": "r3LaduLBvoXOMQfz"
 }

@@ -1,0 +1,38 @@
+{
+  "at": "2026-10-25T19:16:51.110Z",
+  "checks": [
+    {
+      "test": "unverified-account-stored",
+      "ok": true
+    },
+    {
+      "test": "account-email-confirmed",
+      "ok": true
+    },
+    {
+      "test": "verified-account-session",
+      "ok": true
+    },
+    {
+      "test": "reset-token-consumed-once-under-concurrency",
+      "ok": true
+    },
+    {
+      "test": "password-updated",
+      "ok": true
+    },
+    {
+      "test": "old-session-invalid-after-password-change",
+      "ok": true
+    },
+    {
+      "test": "temporary-token-removed",
+      "ok": true
+    },
+    {
+      "test": "temporary-account-removed",
+      "ok": true
+    }
+  ],
+  "emailsSent": 0
+}

@@ -1,0 +1,1726 @@
+{
+  "name": "DrivePilot - Comptes et récupération",
+  "nodes": [
+    {
+      "name": "Webhook Account Get",
+      "id": "webhook-account-get",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "drivepilot-app/api/accounts/get",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "910ebf0a-3f7c-4b15-a28e-e34ede225658",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "5qfz2V5523XWA4Dy",
+          "name": "DrivePilot application - webhook dédié"
+        }
+      }
+    },
+    {
+      "name": "Validate Account Get",
+      "id": "validate-account-get",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function str(v,n){if(typeof v!==\"string\"||!v.trim()||v.length>n)throw Error(\"text\");return v.trim();}function hex(v,n){if(typeof v!==\"string\"||v.length!==n||!/^[a-f0-9]+$/.test(v))throw Error(\"hex\");return v;}function uuid(v){if(typeof v!==\"string\"||!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(v))throw Error(\"id\");return v;}function email(v){v=str(v,254).toLowerCase();if(!/^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$/i.test(v))throw Error(\"email\");return v;}const input=$input.first().json;try{obj(input.query,[\"identifier\"]);const data={identifier:str(input.query.identifier,254).toLowerCase()};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
+      },
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "name": "Valid Account Get",
+      "id": "valid-account-get",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "name": "Bad Account Get",
+      "id": "bad-account-get",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"Entrée invalide.\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        120
+      ]
+    },
+    {
+      "name": "Store Account Get",
+      "id": "store-account-get",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "cAF1gVR3aj80KhP8"
+        },
+        "matchType": "anyCondition",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.identifier }}"
+            },
+            {
+              "keyName": "username",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.identifier }}"
+            }
+          ]
+        },
+        "returnAll": false,
+        "limit": 20
+      },
+      "position": [
+        880,
+        0
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Format Account Get",
+      "id": "format-account-get",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const rows=$input.all().map(x=>x.json).filter(x=>x.account_id);const verified=rows.filter(x=>x.verified);const candidates=verified.length?verified:rows;return [{json:{success:true,account:candidates.length===1?candidates[0]:null,conflict:candidates.length>1}}];"
+      },
+      "position": [
+        1100,
+        0
+      ]
+    },
+    {
+      "name": "Respond Account Get",
+      "id": "respond-account-get",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1320,
+        0
+      ]
+    },
+    {
+      "name": "Webhook Account Create",
+      "id": "webhook-account-create",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drivepilot-app/api/accounts/create",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "f82a1a25-e9e4-425c-8273-683a60ca08a5",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "5qfz2V5523XWA4Dy",
+          "name": "DrivePilot application - webhook dédié"
+        }
+      }
+    },
+    {
+      "name": "Validate Account Create",
+      "id": "validate-account-create",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function str(v,n){if(typeof v!==\"string\"||!v.trim()||v.length>n)throw Error(\"text\");return v.trim();}function hex(v,n){if(typeof v!==\"string\"||v.length!==n||!/^[a-f0-9]+$/.test(v))throw Error(\"hex\");return v;}function uuid(v){if(typeof v!==\"string\"||!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(v))throw Error(\"id\");return v;}function email(v){v=str(v,254).toLowerCase();if(!/^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$/i.test(v))throw Error(\"email\");return v;}const input=$input.first().json;try{obj(input.body,[\"id\",\"username\",\"email\",\"name\",\"salt\",\"passwordHash\",\"role\",\"verified\",\"authVersion\"]);const b=input.body;if(![\"admin\",\"chauffeur\"].includes(b.role)||typeof b.verified!==\"boolean\")throw Error(\"role\");const data={account_id:uuid(b.id),username:str(b.username,254).toLowerCase(),email:email(b.email),display_name:str(b.name,100),salt:hex(b.salt,48),password_hash:hex(b.passwordHash,128),role:b.role,verified:b.verified,auth_version:hex(b.authVersion,64),last_mail_at:0};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
+      },
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "name": "Valid Account Create",
+      "id": "valid-account-create",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "name": "Bad Account Create",
+      "id": "bad-account-create",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"Entrée invalide.\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        420
+      ]
+    },
+    {
+      "name": "Prepare Account Create",
+      "id": "prepare-account-create",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "return [{json:$input.first().json.data}];"
+      },
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "name": "Store Account Create",
+      "id": "store-account-create",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "cAF1gVR3aj80KhP8"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        }
+      },
+      "position": [
+        880,
+        300
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Format Account Create",
+      "id": "format-account-create",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "return [{json:{success:true}}];"
+      },
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "name": "Respond Account Create",
+      "id": "respond-account-create",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1320,
+        300
+      ]
+    },
+    {
+      "name": "Webhook Account Verify",
+      "id": "webhook-account-verify",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drivepilot-app/api/accounts/verify",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        600
+      ],
+      "webhookId": "8be927aa-d628-4546-b68e-a583dc25bd94",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "5qfz2V5523XWA4Dy",
+          "name": "DrivePilot application - webhook dédié"
+        }
+      }
+    },
+    {
+      "name": "Validate Account Verify",
+      "id": "validate-account-verify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function str(v,n){if(typeof v!==\"string\"||!v.trim()||v.length>n)throw Error(\"text\");return v.trim();}function hex(v,n){if(typeof v!==\"string\"||v.length!==n||!/^[a-f0-9]+$/.test(v))throw Error(\"hex\");return v;}function uuid(v){if(typeof v!==\"string\"||!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(v))throw Error(\"id\");return v;}function email(v){v=str(v,254).toLowerCase();if(!/^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$/i.test(v))throw Error(\"email\");return v;}const input=$input.first().json;try{obj(input.body,[\"id\"]);const data={id:uuid(input.body.id)};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
+      },
+      "position": [
+        220,
+        600
+      ]
+    },
+    {
+      "name": "Valid Account Verify",
+      "id": "valid-account-verify",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        600
+      ]
+    },
+    {
+      "name": "Bad Account Verify",
+      "id": "bad-account-verify",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"Entrée invalide.\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        720
+      ]
+    },
+    {
+      "name": "Store Account Verify",
+      "id": "store-account-verify",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "cAF1gVR3aj80KhP8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "account_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "verified": true
+          }
+        }
+      },
+      "position": [
+        880,
+        600
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Format Account Verify",
+      "id": "format-account-verify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "return [{json:{success:true}}];"
+      },
+      "position": [
+        1100,
+        600
+      ]
+    },
+    {
+      "name": "Respond Account Verify",
+      "id": "respond-account-verify",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1320,
+        600
+      ]
+    },
+    {
+      "name": "Webhook Password Update",
+      "id": "webhook-password-update",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drivepilot-app/api/accounts/password",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        900
+      ],
+      "webhookId": "688c0a54-4e86-4f16-919e-32469a69e796",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "5qfz2V5523XWA4Dy",
+          "name": "DrivePilot application - webhook dédié"
+        }
+      }
+    },
+    {
+      "name": "Validate Password Update",
+      "id": "validate-password-update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function str(v,n){if(typeof v!==\"string\"||!v.trim()||v.length>n)throw Error(\"text\");return v.trim();}function hex(v,n){if(typeof v!==\"string\"||v.length!==n||!/^[a-f0-9]+$/.test(v))throw Error(\"hex\");return v;}function uuid(v){if(typeof v!==\"string\"||!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(v))throw Error(\"id\");return v;}function email(v){v=str(v,254).toLowerCase();if(!/^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$/i.test(v))throw Error(\"email\");return v;}const input=$input.first().json;try{obj(input.body,[\"id\",\"salt\",\"passwordHash\",\"authVersion\"]);const b=input.body;const data={id:uuid(b.id),salt:hex(b.salt,48),passwordHash:hex(b.passwordHash,128),authVersion:hex(b.authVersion,64)};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
+      },
+      "position": [
+        220,
+        900
+      ]
+    },
+    {
+      "name": "Valid Password Update",
+      "id": "valid-password-update",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        900
+      ]
+    },
+    {
+      "name": "Bad Password Update",
+      "id": "bad-password-update",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"Entrée invalide.\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        1020
+      ]
+    },
+    {
+      "name": "Store Password Update",
+      "id": "store-password-update",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "cAF1gVR3aj80KhP8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "account_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "salt": "={{ $json.data.salt }}",
+            "password_hash": "={{ $json.data.passwordHash }}",
+            "auth_version": "={{ $json.data.authVersion }}"
+          }
+        }
+      },
+      "position": [
+        880,
+        900
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Format Password Update",
+      "id": "format-password-update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "return [{json:{success:true}}];"
+      },
+      "position": [
+        1100,
+        900
+      ]
+    },
+    {
+      "name": "Respond Password Update",
+      "id": "respond-password-update",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1320,
+        900
+      ]
+    },
+    {
+      "name": "Webhook Token Create",
+      "id": "webhook-token-create",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drivepilot-app/api/accounts/token/create",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        1200
+      ],
+      "webhookId": "00679528-53f5-4cf7-93ca-23789dc7eb88",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "5qfz2V5523XWA4Dy",
+          "name": "DrivePilot application - webhook dédié"
+        }
+      }
+    },
+    {
+      "name": "Validate Token Create",
+      "id": "validate-token-create",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function str(v,n){if(typeof v!==\"string\"||!v.trim()||v.length>n)throw Error(\"text\");return v.trim();}function hex(v,n){if(typeof v!==\"string\"||v.length!==n||!/^[a-f0-9]+$/.test(v))throw Error(\"hex\");return v;}function uuid(v){if(typeof v!==\"string\"||!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(v))throw Error(\"id\");return v;}function email(v){v=str(v,254).toLowerCase();if(!/^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$/i.test(v))throw Error(\"email\");return v;}const input=$input.first().json;try{obj(input.body,[\"hash\",\"id\",\"email\",\"purpose\",\"expires\",\"authVersion\"]);const b=input.body;if(![\"verify\",\"reset\"].includes(b.purpose)||!Number.isFinite(b.expires)||b.expires<=Date.now()||b.expires>Date.now()+86500000)throw Error(\"expiry\");const data={token_hash:hex(b.hash,64),account_id:uuid(b.id),email:email(b.email),purpose:b.purpose,expires_at:b.expires,used:false,auth_version:hex(b.authVersion,64)};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
+      },
+      "position": [
+        220,
+        1200
+      ]
+    },
+    {
+      "name": "Valid Token Create",
+      "id": "valid-token-create",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        1200
+      ]
+    },
+    {
+      "name": "Bad Token Create",
+      "id": "bad-token-create",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"Entrée invalide.\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        1320
+      ]
+    },
+    {
+      "name": "Prepare Token Create",
+      "id": "prepare-token-create",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "return [{json:$input.first().json.data}];"
+      },
+      "position": [
+        660,
+        1200
+      ]
+    },
+    {
+      "name": "Store Token Create",
+      "id": "store-token-create",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "PYGOA1A6g1dAZIbH"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        }
+      },
+      "position": [
+        880,
+        1200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Format Token Create",
+      "id": "format-token-create",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "return [{json:{success:true}}];"
+      },
+      "position": [
+        1100,
+        1200
+      ]
+    },
+    {
+      "name": "Respond Token Create",
+      "id": "respond-token-create",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1320,
+        1200
+      ]
+    },
+    {
+      "name": "Webhook Token Consume",
+      "id": "webhook-token-consume",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drivepilot-app/api/accounts/token/consume",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        1500
+      ],
+      "webhookId": "88a8a0df-8a60-4120-80e9-6d8f8cf5c60b",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "5qfz2V5523XWA4Dy",
+          "name": "DrivePilot application - webhook dédié"
+        }
+      }
+    },
+    {
+      "name": "Validate Token Consume",
+      "id": "validate-token-consume",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function str(v,n){if(typeof v!==\"string\"||!v.trim()||v.length>n)throw Error(\"text\");return v.trim();}function hex(v,n){if(typeof v!==\"string\"||v.length!==n||!/^[a-f0-9]+$/.test(v))throw Error(\"hex\");return v;}function uuid(v){if(typeof v!==\"string\"||!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(v))throw Error(\"id\");return v;}function email(v){v=str(v,254).toLowerCase();if(!/^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$/i.test(v))throw Error(\"email\");return v;}const input=$input.first().json;try{obj(input.body,[\"hash\",\"purpose\"]);if(![\"verify\",\"reset\"].includes(input.body.purpose))throw Error(\"purpose\");const data={hash:hex(input.body.hash,64),purpose:input.body.purpose};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
+      },
+      "position": [
+        220,
+        1500
+      ]
+    },
+    {
+      "name": "Valid Token Consume",
+      "id": "valid-token-consume",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        1500
+      ]
+    },
+    {
+      "name": "Bad Token Consume",
+      "id": "bad-token-consume",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"Entrée invalide.\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        1620
+      ]
+    },
+    {
+      "name": "Store Token Consume",
+      "id": "store-token-consume",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "PYGOA1A6g1dAZIbH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "token_hash",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.hash }}"
+            },
+            {
+              "keyName": "purpose",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.purpose }}"
+            },
+            {
+              "keyName": "used",
+              "condition": "eq",
+              "keyValue": false
+            },
+            {
+              "keyName": "expires_at",
+              "condition": "gt",
+              "keyValue": "={{ Date.now() }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "used": true
+          }
+        }
+      },
+      "position": [
+        880,
+        1500
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Format Token Consume",
+      "id": "format-token-consume",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const row=$input.all().map(x=>x.json).find(x=>x.account_id&&x.used===true);return [{json:{success:true,token:row?{accountId:row.account_id,email:row.email,purpose:row.purpose,authVersion:row.auth_version}:null}}];"
+      },
+      "position": [
+        1100,
+        1500
+      ]
+    },
+    {
+      "name": "Respond Token Consume",
+      "id": "respond-token-consume",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1320,
+        1500
+      ]
+    },
+    {
+      "name": "Webhook Send Email",
+      "id": "webhook-send-email",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drivepilot-app/api/accounts/email",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        1900
+      ],
+      "webhookId": "67620322-f98a-40ef-8c9b-d9870889632d",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "5qfz2V5523XWA4Dy",
+          "name": "DrivePilot application - webhook dédié"
+        }
+      }
+    },
+    {
+      "name": "Validate Send Email",
+      "id": "validate-send-email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "function obj(v,keys){if(!v||typeof v!==\"object\"||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error(\"invalid\");}function str(v,n){if(typeof v!==\"string\"||!v.trim()||v.length>n)throw Error(\"text\");return v.trim();}function hex(v,n){if(typeof v!==\"string\"||v.length!==n||!/^[a-f0-9]+$/.test(v))throw Error(\"hex\");return v;}function uuid(v){if(typeof v!==\"string\"||!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(v))throw Error(\"id\");return v;}function email(v){v=str(v,254).toLowerCase();if(!/^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$/i.test(v))throw Error(\"email\");return v;}const input=$input.first().json;try{obj(input.body,[\"id\",\"subject\",\"message\"]);const b=input.body;const subject=str(b.subject,120);if(/[\\r\\n]/.test(subject))throw Error(\"subject\");const data={id:uuid(b.id),subject,message:str(b.message,4000)};return [{json:{valid:true,data}}];}catch{return [{json:{valid:false}}];}"
+      },
+      "position": [
+        220,
+        1900
+      ]
+    },
+    {
+      "name": "Valid Send Email",
+      "id": "valid-send-email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        440,
+        1900
+      ]
+    },
+    {
+      "name": "Bad Send Email",
+      "id": "bad-send-email",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"Entrée invalide.\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "position": [
+        660,
+        2020
+      ]
+    },
+    {
+      "name": "Claim Email Slot",
+      "id": "claim-email-slot",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "cAF1gVR3aj80KhP8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "account_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.data.id }}"
+            },
+            {
+              "keyName": "last_mail_at",
+              "condition": "lt",
+              "keyValue": "={{ Date.now() - 300000 }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "last_mail_at": "={{ Date.now() }}"
+          }
+        }
+      },
+      "position": [
+        660,
+        1900
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Prepare Email",
+      "id": "prepare-email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const account=$input.first().json;const input=$(\"Validate Send Email\").first().json.data;return [{json:{send:!!account.account_id,to:account.email||\"\",subject:input.subject,message:input.message}}];"
+      },
+      "position": [
+        880,
+        1900
+      ]
+    },
+    {
+      "name": "Should Send Email",
+      "id": "should-send-email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "send",
+              "leftValue": "={{ $json.send }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        1100,
+        1900
+      ]
+    },
+    {
+      "name": "SMTP Email",
+      "id": "smtp-email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "parameters": {
+        "fromEmail": "DrivePilot <noreply@partageons.net>",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.message }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "position": [
+        1320,
+        1900
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "JyRII45z5beOX6PX",
+          "name": "DrivePilot SMTP"
+        }
+      }
+    },
+    {
+      "name": "Email Response",
+      "id": "email-response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {success:true} }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "position": [
+        1540,
+        1900
+      ]
+    },
+    {
+      "id": "cleanup-account-tokens",
+      "name": "Cleanup expired tokens",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        2200
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Remove Expired Tokens",
+      "id": "remove-expired-tokens",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "PYGOA1A6g1dAZIbH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "expires_at",
+              "condition": "lt",
+              "keyValue": "={{ Date.now() }}"
+            }
+          ]
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "position": [
+        440,
+        2200
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Account Get": {
+      "main": [
+        [
+          {
+            "node": "Validate Account Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Account Get": {
+      "main": [
+        [
+          {
+            "node": "Valid Account Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Account Get": {
+      "main": [
+        [
+          {
+            "node": "Store Account Get",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Account Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Account Get": {
+      "main": [
+        [
+          {
+            "node": "Format Account Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Account Get": {
+      "main": [
+        [
+          {
+            "node": "Respond Account Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Account Create": {
+      "main": [
+        [
+          {
+            "node": "Validate Account Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Account Create": {
+      "main": [
+        [
+          {
+            "node": "Valid Account Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Account Create": {
+      "main": [
+        [
+          {
+            "node": "Prepare Account Create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Account Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Account Create": {
+      "main": [
+        [
+          {
+            "node": "Store Account Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Account Create": {
+      "main": [
+        [
+          {
+            "node": "Format Account Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Account Create": {
+      "main": [
+        [
+          {
+            "node": "Respond Account Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Account Verify": {
+      "main": [
+        [
+          {
+            "node": "Validate Account Verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Account Verify": {
+      "main": [
+        [
+          {
+            "node": "Valid Account Verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Account Verify": {
+      "main": [
+        [
+          {
+            "node": "Store Account Verify",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Account Verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Account Verify": {
+      "main": [
+        [
+          {
+            "node": "Format Account Verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Account Verify": {
+      "main": [
+        [
+          {
+            "node": "Respond Account Verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Password Update": {
+      "main": [
+        [
+          {
+            "node": "Validate Password Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Password Update": {
+      "main": [
+        [
+          {
+            "node": "Valid Password Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Password Update": {
+      "main": [
+        [
+          {
+            "node": "Store Password Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Password Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Password Update": {
+      "main": [
+        [
+          {
+            "node": "Format Password Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Password Update": {
+      "main": [
+        [
+          {
+            "node": "Respond Password Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Token Create": {
+      "main": [
+        [
+          {
+            "node": "Validate Token Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Token Create": {
+      "main": [
+        [
+          {
+            "node": "Valid Token Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Token Create": {
+      "main": [
+        [
+          {
+            "node": "Prepare Token Create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Token Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Token Create": {
+      "main": [
+        [
+          {
+            "node": "Store Token Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Token Create": {
+      "main": [
+        [
+          {
+            "node": "Format Token Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Token Create": {
+      "main": [
+        [
+          {
+            "node": "Respond Token Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Token Consume": {
+      "main": [
+        [
+          {
+            "node": "Validate Token Consume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Token Consume": {
+      "main": [
+        [
+          {
+            "node": "Valid Token Consume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Token Consume": {
+      "main": [
+        [
+          {
+            "node": "Store Token Consume",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Token Consume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Token Consume": {
+      "main": [
+        [
+          {
+            "node": "Format Token Consume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Token Consume": {
+      "main": [
+        [
+          {
+            "node": "Respond Token Consume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Send Email": {
+      "main": [
+        [
+          {
+            "node": "Validate Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Send Email": {
+      "main": [
+        [
+          {
+            "node": "Valid Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Send Email": {
+      "main": [
+        [
+          {
+            "node": "Claim Email Slot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim Email Slot": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email": {
+      "main": [
+        [
+          {
+            "node": "Should Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Send Email": {
+      "main": [
+        [
+          {
+            "node": "SMTP Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMTP Email": {
+      "main": [
+        [
+          {
+            "node": "Email Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup expired tokens": {
+      "main": [
+        [
+          {
+            "node": "Remove Expired Tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Toronto",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false
+  },
+  "active": false
+}

@@ -23,6 +23,7 @@ class BackendService {
     return data;
   }
   async login(identifier: string, password: string): Promise<UserSession> {
+    if (identifier.trim().toLowerCase() === 'test@drivepilot.com' && password === 'test1234') return this.loginDemo();
     const session = await this.api('/api/auth/login', 'POST', { identifier, password });
     this.demo = false;
     sessionStorage.removeItem('drivepilot_demo');
@@ -36,6 +37,22 @@ class BackendService {
     if (!response.ok) throw new Error('Session indisponible.');
     return response.json();
   }
+
+  async register(name: string, email: string, password: string): Promise<{message: string}> {
+    return this.api('/api/auth/register', 'POST', {name, email, password});
+  }
+
+  async forgotPassword(email: string): Promise<{message: string}> {
+    return this.api('/api/auth/forgot-password', 'POST', {email});
+  }
+
+  async verifyEmail(token: string): Promise<{message: string}> {
+    return this.api('/api/auth/verify', 'POST', {token});
+  }
+
+  async resetPassword(token: string, password: string): Promise<{message: string}> {
+    return this.api('/api/auth/reset-password', 'POST', {token, password});
+  }
   async logout(): Promise<void> {
     if (!this.demo) await this.api('/api/auth/logout', 'POST');
     this.demo = false;
@@ -45,7 +62,7 @@ class BackendService {
   async loginDemo(): Promise<UserSession> {
     this.demo = true;
     sessionStorage.setItem('drivepilot_demo', '1');
-    return { mode: 'demo', user: { id: 'demo', email: 'demo@example.test', name: 'Chauffeur démo', role: 'chauffeur' } };
+    return { mode: 'demo', user: { id: 'trial', email: 'test@drivepilot.com', name: 'Compte d’essai', role: 'chauffeur' } };
   }
   private demoRows(): Service[] {
     const saved = localStorage.getItem(DEMO_SERVICES);

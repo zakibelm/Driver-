@@ -20,9 +20,10 @@ export function createN8nSecurity(env, fetcher = fetch) {
     return {ip:hash('ip:'+key.slice(0,split)),account:hash('account:'+key.slice(split+1))};
   }
   return {
+    request,
     sessions:{
       async get(id) { return (await request('api/auth/session/get?hash='+digest(id))).session; },
-      async set(id,session) { await request('api/auth/session/create','POST',{hash:digest(id),user:session.user,expires:session.expires}); },
+      async set(id,session) { await request('api/auth/session/create','POST',{hash:digest(id),user:session.user,expires:session.expires,...(session.authVersion?{authVersion:session.authVersion}:{})}); },
       async delete(id) { if(/^[a-f0-9]{64}$/.test(id)) await request('api/auth/session/delete','DELETE',{hash:digest(id)}); },
     },
     limiter:{
